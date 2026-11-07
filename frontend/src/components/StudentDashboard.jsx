@@ -1,4 +1,3 @@
-
 import "./StudentDashboard.css";
 
 function StudentDashboard({
@@ -6,6 +5,8 @@ function StudentDashboard({
   onLogout,
   onOpenProfile,
   onOpenAssessment,
+  onOpenHistory,
+  onOpenConsultation,
 }) {
   const firstName = user?.name?.split(" ")[0] || "Mahasiswa";
 
@@ -13,7 +14,7 @@ function StudentDashboard({
     <div className="dashboard">
       {/* SIDEBAR */}
       <aside className="dashboard-sidebar">
-        <a href="#" className="dashboard-logo">
+        <a href="#dashboard" className="dashboard-logo">
           startiva<span>.</span>
         </a>
 
@@ -51,16 +52,31 @@ function StudentDashboard({
             Business Assessment
           </a>
 
+          {/* ASSESSMENT HISTORY */}
+          <a
+            href="#assessment-history"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenHistory?.();
+            }}
+          >
+            <span>▤</span>
+            Assessment History
+          </a>
+
+          {/* CONSULTATION */}
           <a
             href="#consultation"
-            onClick={(e) => e.preventDefault()}
-            className="disabled-menu"
-            title="Fitur konsultasi belum tersedia"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenConsultation?.();
+            }}
           >
             <span>✳</span>
             Consultation
           </a>
 
+          {/* MY PROFILE */}
           <a
             href="#profile"
             onClick={(e) => {
@@ -252,11 +268,34 @@ function StudentDashboard({
               </button>
             </article>
 
+            {/* ASSESSMENT HISTORY */}
+            <article className="dashboard-feature-card assessment-card">
+              <div className="dashboard-card-top">
+                <span className="dashboard-card-icon">▤</span>
+                <span className="dashboard-card-number">03</span>
+              </div>
+
+              <h3>Assessment History</h3>
+
+              <p>
+                Lihat kembali hasil assessment sebelumnya,
+                skor kesiapan, dan perkembangan bisnismu.
+              </p>
+
+              <button
+                type="button"
+                className="dashboard-feature-button"
+                onClick={onOpenHistory}
+              >
+                Lihat Riwayat →
+              </button>
+            </article>
+
             {/* BUSINESS CONSULTATION */}
             <article className="dashboard-feature-card consultation-card">
               <div className="dashboard-card-top">
                 <span className="dashboard-card-icon">✳</span>
-                <span className="dashboard-card-number">03</span>
+                <span className="dashboard-card-number">04</span>
               </div>
 
               <h3>Business Consultation</h3>
@@ -267,9 +306,13 @@ function StudentDashboard({
                 hingga pengelolaan bisnis.
               </p>
 
-              <span className="feature-coming-soon">
-                Consultation · Coming soon
-              </span>
+              <button
+                type="button"
+                className="dashboard-feature-button"
+                onClick={onOpenConsultation}
+              >
+                Ajukan Konsultasi →
+              </button>
             </article>
 
           </div>

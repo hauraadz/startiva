@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BusinessProfileController;
 use App\Http\Controllers\Api\BusinessAssessmentController;
+use App\Http\Controllers\Api\ConsultationController;
 
 // Test koneksi API
 Route::get('/test', function () {
@@ -33,5 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/business-assessment', [BusinessAssessmentController::class, 'store']);
     Route::get('/business-assessment', [BusinessAssessmentController::class, 'index']);
     Route::get('/business-assessment/latest', [BusinessAssessmentController::class, 'latest']);
+
+    // BUSINESS CONSULTATION
+    Route::get('/consultations', [ConsultationController::class, 'index']);
+    Route::post('/consultations', [ConsultationController::class, 'store']);
+    Route::get('/consultations/{id}', [ConsultationController::class, 'show']);
 
 });

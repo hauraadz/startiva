@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 const assessmentSections = [
   {
@@ -60,6 +61,8 @@ const answerOptions = [
 function BusinessAssessment() {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const totalQuestions = assessmentSections.reduce(
     (total, section) => total + section.questions.length,
@@ -67,6 +70,7 @@ function BusinessAssessment() {
   );
 
   const answeredCount = Object.keys(answers).length;
+
   const progress = Math.round(
     (answeredCount / totalQuestions) * 100
   );
@@ -78,6 +82,7 @@ function BusinessAssessment() {
     }));
   };
 
+  // Menghitung hasil assessment
   const calculateResult = () => {
     let totalScore = 0;
     const aspectResults = [];
@@ -132,39 +137,23 @@ function BusinessAssessment() {
         "Bisnis kamu masih membutuhkan persiapan lebih lanjut sebelum dijalankan atau dikembangkan.";
     }
 
-    setResult({
+    return {
       totalScore,
       maxScore,
       percentage,
       category,
       description,
       aspects: aspectResults,
-    });
+    };
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (answeredCount !== totalQuestions) {
-      alert("Silakan jawab seluruh pertanyaan terlebih dahulu.");
-      return;
-    }
-
-    calculateResult();
-  };
-
-  const handleReset = () => {
-    setAnswers({});
-    setResult(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const getRecommendations = () => {
-    if (!result) return [];
+  // Membuat rekomendasi berdasarkan aspek
+  const getRecommendations = (assessmentResult) => {
+    if (!assessmentResult) return [];
 
     const recommendations = [];
 
-    result.aspects.forEach((aspect) => {
+    assessmentResult.aspects.forEach((aspect) => {
       if (aspect.percentage < 65) {
         switch (aspect.title) {
           case "Kesiapan Produk":
@@ -204,6 +193,129 @@ function BusinessAssessment() {
     });
 
     return recommendations;
+  };
+
+  // Mengirim hasil assessment ke Laravel
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (answeredCount !== totalQuestions) {
+      setError("Silakan jawab seluruh pertanyaan terlebih dahulu.");
+      return;
+    }
+
+    const token = localStorage.getItem("startiva_token");
+
+    if (!token) {
+      setError("Sesi login tidak ditemukan. Silakan login kembali.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const calculatedResult = calculateResult();
+
+      const recommendations = getRecommendations(calculatedResult);
+
+      const payload = {
+        answers: answers,
+        aspect_scores: calculatedResult.aspects,
+        recommendations: recommendations,
+      };
+
+      const response = await fetch(
+        `${API_URL.replace(/\/$/, "")}/business-assessment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const validationErrors = data.errors
+          ? Object.values(data.errors).flat().join(" ")
+          : "";
+
+        throw new Error(
+          validationErrors ||
+            data.message ||
+            "Gagal menyimpan hasil assessment."
+        );
+      }
+
+      if (!data.success) {
+        throw new Error(
+          data.message || "Hasil assessment gagal disimpan."
+        );
+      }
+
+      // Menampilkan hasil dan status integrasi n8n
+      setResult({
+        ...calculatedResult,
+        recommendations,
+        assessmentId: data.data.id,
+        createdAt: data.data.created_at,
+        n8nStatus: data.n8n_status || "not_configured",
+      });
+    } catch (err) {
+      console.error("Assessment error:", err);
+
+      setError(
+        err.message || "Terjadi kesalahan saat menyimpan assessment."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setAnswers({});
+    setResult(null);
+    setError("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // Tampilan status integrasi n8n
+  const getN8nStatus = () => {
+    switch (result?.n8nStatus) {
+      case "sent":
+        return {
+          title: "Data berhasil dikirim ke n8n",
+          description:
+            "Hasil assessment berhasil diteruskan ke sistem pengolahan n8n.",
+          className: "n8n-success",
+        };
+
+      case "failed":
+        return {
+          title: "Pengiriman ke n8n gagal",
+          description:
+            "Hasil assessment tetap berhasil disimpan di database Laravel, tetapi belum berhasil diteruskan ke n8n.",
+          className: "n8n-failed",
+        };
+
+      case "not_configured":
+      default:
+        return {
+          title: "Integrasi n8n belum terhubung",
+          description:
+            "Hasil assessment berhasil disimpan, tetapi URL Webhook n8n belum dikonfigurasi atau belum terbaca oleh Laravel.",
+          className: "n8n-pending",
+        };
+    }
   };
 
   return (
@@ -334,6 +446,17 @@ function BusinessAssessment() {
           cursor: not-allowed;
         }
 
+        .error-message {
+          background: #fff0f0;
+          border: 1px solid #ffd4d4;
+          color: #c0392b;
+          padding: 13px 15px;
+          border-radius: 9px;
+          margin: 15px 0;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
         .result-card {
           background: white;
           border: 1px solid #eee;
@@ -360,6 +483,11 @@ function BusinessAssessment() {
           margin: 8px 0;
         }
 
+        .result-score p {
+          line-height: 1.7;
+          color: #666;
+        }
+
         .aspect-result {
           margin: 20px 0;
         }
@@ -377,6 +505,48 @@ function BusinessAssessment() {
           color: #666;
         }
 
+        .saved-info {
+          background: #f0faf3;
+          color: #287744;
+          border-radius: 9px;
+          padding: 14px 16px;
+          margin: 15px 0;
+          font-size: 13px;
+          line-height: 1.8;
+        }
+
+        .n8n-status {
+          padding: 15px 16px;
+          border-radius: 9px;
+          margin: 15px 0 22px;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+
+        .n8n-status strong {
+          display: block;
+          margin-bottom: 4px;
+          font-size: 14px;
+        }
+
+        .n8n-success {
+          background: #effaf3;
+          border: 1px solid #ccebd5;
+          color: #287744;
+        }
+
+        .n8n-failed {
+          background: #fff5ed;
+          border: 1px solid #f5d7bf;
+          color: #a85b27;
+        }
+
+        .n8n-pending {
+          background: #f5f2ff;
+          border: 1px solid #e3dcf8;
+          color: #7157bd;
+        }
+
         .reset-button {
           width: 100%;
           padding: 14px;
@@ -387,6 +557,10 @@ function BusinessAssessment() {
           cursor: pointer;
           margin-top: 20px;
           font-weight: 600;
+        }
+
+        .reset-button:hover {
+          background: #f7f4ff;
         }
 
         @media (max-width: 600px) {
@@ -401,6 +575,10 @@ function BusinessAssessment() {
           .assessment-header h1 {
             font-size: 23px;
           }
+
+          .result-card {
+            padding: 20px;
+          }
         }
       `}</style>
 
@@ -408,6 +586,7 @@ function BusinessAssessment() {
         <>
           <div className="assessment-header">
             <h1>Business Readiness Assessment</h1>
+
             <p>
               Kenali tingkat kesiapan bisnis kuliner kamu melalui
               penilaian beberapa aspek penting sebelum memulai
@@ -495,12 +674,20 @@ function BusinessAssessment() {
               </div>
             ))}
 
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
+
             <button
               type="submit"
               className="assessment-submit"
-              disabled={answeredCount !== totalQuestions}
+              disabled={answeredCount !== totalQuestions || loading}
             >
-              Lihat Hasil Assessment
+              {loading
+                ? "Menyimpan Hasil..."
+                : "Lihat Hasil Assessment"}
             </button>
           </form>
         </>
@@ -513,10 +700,32 @@ function BusinessAssessment() {
             jawaban yang telah kamu berikan.
           </p>
 
+          <div className="saved-info">
+            <strong>Hasil assessment berhasil disimpan.</strong>
+            <br />
+            Data telah tersimpan di database Laravel.
+            <br />
+            ID Assessment: #{result.assessmentId}
+          </div>
+
+          {(() => {
+            const status = getN8nStatus();
+
+            return (
+              <div className={`n8n-status ${status.className}`}>
+                <strong>{status.title}</strong>
+                {status.description}
+              </div>
+            );
+          })()}
+
           <div className="result-score">
             <strong>{result.percentage}%</strong>
+
             <h2>{result.category}</h2>
+
             <p>{result.description}</p>
+
             <small>
               Total skor: {result.totalScore} / {result.maxScore}
             </small>
@@ -542,9 +751,9 @@ function BusinessAssessment() {
 
           <h3>Rekomendasi Pengembangan</h3>
 
-          {getRecommendations().length > 0 ? (
+          {result.recommendations.length > 0 ? (
             <ul className="recommendation-list">
-              {getRecommendations().map((item, index) => (
+              {result.recommendations.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>

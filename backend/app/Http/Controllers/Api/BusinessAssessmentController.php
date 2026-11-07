@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessAssessment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BusinessAssessmentController extends Controller
 {
-    // Menyimpan hasil assessment
+    // Menyimpan hasil assessment dan mengirim data ke n8n
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -49,6 +51,7 @@ class BusinessAssessmentController extends Controller
             $readinessLevel = 'Belum Siap';
         }
 
+        // Menyimpan hasil ke database
         $assessment = $request->user()
             ->businessAssessments()
             ->create([
@@ -60,9 +63,50 @@ class BusinessAssessmentController extends Controller
                 'recommendations' => $validated['recommendations'] ?? null,
             ]);
 
+        // Mengirim hasil assessment ke n8n
+        $n8nStatus = 'not_configured';
+
+        $webhookUrl = env('N8N_ASSESSMENT_WEBHOOK');
+
+        if ($webhookUrl) {
+            try {
+                $response = Http::timeout(15)->post($webhookUrl, [
+                    'assessment_id' => $assessment->id,
+                    'user_id' => $request->user()->id,
+                    'answers' => $validated['answers'],
+                    'total_score' => $totalScore,
+                    'max_score' => $maxScore,
+                    'score_percentage' => $percentage,
+                    'readiness_level' => $readinessLevel,
+                    'aspect_scores' => $validated['aspect_scores'] ?? [],
+                    'recommendations' => $validated['recommendations'] ?? [],
+                    'created_at' => $assessment->created_at,
+                ]);
+
+                $n8nStatus = $response->successful()
+                    ? 'sent'
+                    : 'failed';
+
+                if (!$response->successful()) {
+                    Log::warning('n8n gagal menerima assessment.', [
+                        'assessment_id' => $assessment->id,
+                        'response' => $response->body(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                $n8nStatus = 'failed';
+
+                Log::error('Gagal menghubungi n8n.', [
+                    'assessment_id' => $assessment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Hasil assessment berhasil disimpan.',
+            'n8n_status' => $n8nStatus,
             'data' => $assessment,
         ], 201);
     }

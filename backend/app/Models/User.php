@@ -17,6 +17,11 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\BusinessAssessment::class);
     }
 
+    public function consultations()
+    {
+        return $this->hasMany(\App\Models\Consultation::class);
+    }
+
         public function businessProfile()
     {
         return $this->hasOne(BusinessProfile::class);
@@ -52,4 +57,5 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    
 }

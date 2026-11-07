@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import "./App.css";
 
@@ -7,6 +6,11 @@ import AuthModal from "./components/AuthModal";
 import StudentDashboard from "./components/StudentDashboard";
 import BusinessProfile from "./components/BusinessProfile";
 import BusinessAssessment from "./pages/BusinessAssessment";
+import AssessmentHistory from "./pages/AssessmentHistory";
+import Consultation from "./pages/Consultation";
+
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 function App() {
   const [authMode, setAuthMode] = useState(null);
@@ -16,7 +20,9 @@ function App() {
     try {
       const savedUser = localStorage.getItem("startiva_user");
       return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
+    } catch (error) {
+      console.error("Gagal membaca data pengguna:", error);
+      localStorage.removeItem("startiva_user");
       return null;
     }
   });
@@ -26,6 +32,8 @@ function App() {
     setCurrentUser(user);
     setCurrentPage("dashboard");
     setAuthMode(null);
+
+    localStorage.setItem("startiva_user", JSON.stringify(user));
   };
 
   // LOGOUT
@@ -34,7 +42,7 @@ function App() {
 
     try {
       if (token) {
-        await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+        await fetch(`${API_URL}/logout`, {
           method: "POST",
           headers: {
             Accept: "application/json",
@@ -44,92 +52,88 @@ function App() {
       }
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("startiva_token");
+      localStorage.removeItem("startiva_user");
+
+      setCurrentUser(null);
+      setCurrentPage("dashboard");
+      setAuthMode(null);
     }
-
-    localStorage.removeItem("startiva_token");
-    localStorage.removeItem("startiva_user");
-
-    setCurrentUser(null);
-    setCurrentPage("dashboard");
-    setAuthMode(null);
   };
 
-  // TOMBOL KEMBALI
+  // NAVIGASI HALAMAN
+  const navigateTo = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // KEMBALI KE DASHBOARD
   const handleBackToDashboard = () => {
-    setCurrentPage("dashboard");
+    navigateTo("dashboard");
   };
 
-  // HALAMAN PENGGUNA YANG SUDAH LOGIN
+  // HALAMAN SETELAH LOGIN
   if (currentUser) {
     return (
-      <div className="app">
-        {/* NAVIGASI HALAMAN */}
+      <div className="app authenticated-app">
         {currentPage !== "dashboard" && (
-          <div
-            style={{
-              padding: "18px 24px",
-              background: "#fff",
-              borderBottom: "1px solid #eee",
-            }}
-          >
+          <div className="page-navigation">
             <button
               type="button"
+              className="back-dashboard-button"
               onClick={handleBackToDashboard}
-              style={{
-                padding: "10px 18px",
-                border: "none",
-                borderRadius: "10px",
-                background: "#7965c8",
-                color: "#fff",
-                cursor: "pointer",
-                fontWeight: "600",
-              }}
             >
-              ← Kembali ke Dashboard
+              <span className="back-arrow">←</span>
+              Kembali ke Dashboard
             </button>
           </div>
         )}
 
-        {/* HALAMAN PROFIL BISNIS */}
-        {currentPage === "business-profile" && (
-          <BusinessProfile />
-        )}
+        <main className="authenticated-content">
+          {currentPage === "dashboard" && (
+            <StudentDashboard
+              user={currentUser}
+              onLogout={handleLogout}
+              onOpenProfile={() => navigateTo("business-profile")}
+              onOpenAssessment={() => navigateTo("business-assessment")}
+              onOpenHistory={() => navigateTo("assessment-history")}
+              onOpenConsultation={() => navigateTo("consultation")}
+            />
+          )}
 
-        {/* HALAMAN BUSINESS ASSESSMENT */}
-        {currentPage === "business-assessment" && (
-          <BusinessAssessment />
-        )}
+          {currentPage === "business-profile" && (
+            <BusinessProfile />
+          )}
 
-        {/* HALAMAN DASHBOARD */}
-        {currentPage === "dashboard" && (
-          <StudentDashboard
-            user={currentUser}
-            onLogout={handleLogout}
-            onOpenProfile={() =>
-              setCurrentPage("business-profile")
-            }
-            onOpenAssessment={() =>
-              setCurrentPage("business-assessment")
-            }
-          />
-        )}
+          {currentPage === "business-assessment" && (
+            <BusinessAssessment />
+          )}
+
+          {currentPage === "assessment-history" && (
+            <AssessmentHistory />
+          )}
+
+          {currentPage === "consultation" && (
+            <Consultation />
+          )}
+        </main>
 
         <ApiStatus />
       </div>
     );
   }
 
-  // LANDING PAGE JIKA BELUM LOGIN
+  // LANDING PAGE SEBELUM LOGIN
   return (
-    <div className="app">
-
+    <div className="app landing-app">
       {/* NAVBAR */}
       <header className="navbar">
         <a href="#beranda" className="logo">
           startiva<span>.</span>
         </a>
 
-        <nav>
+        <nav className="navbar-menu">
           <a href="#beranda">Beranda</a>
           <a href="#tentang">Tentang</a>
           <a href="#fitur">Fitur</a>
@@ -156,12 +160,11 @@ function App() {
       </header>
 
       <main>
-
         {/* HERO */}
         <section className="hero" id="beranda">
           <div className="hero-content">
             <div className="eyebrow">
-              <span className="status-dot"></span>
+              <span className="status-dot" />
               STUDENT BUSINESS PLATFORM
             </div>
 
@@ -197,11 +200,13 @@ function App() {
             </div>
           </div>
 
+          {/* HERO VISUAL */}
           <div className="hero-visual">
-            <div className="visual-glow"></div>
+            <div className="visual-glow" />
 
             <div className="floating-card top-card">
               <span className="card-icon">✦</span>
+
               <div>
                 <strong>Business Potential</strong>
                 <small>Discover your strength</small>
@@ -212,6 +217,7 @@ function App() {
               <div className="illustration-circle">
                 <div className="inner-circle">
                   <span className="bulb">✧</span>
+
                   <div className="sparkle one">✦</div>
                   <div className="sparkle two">✧</div>
                   <div className="sparkle three">✦</div>
@@ -226,10 +232,12 @@ function App() {
 
             <div className="floating-card bottom-card">
               <div className="mini-avatar">S</div>
+
               <div>
                 <strong>Your next chapter</strong>
                 <small>Starts here.</small>
               </div>
+
               <span className="check-icon">✓</span>
             </div>
 
@@ -260,6 +268,7 @@ function App() {
           <div className="section-heading">
             <div>
               <div className="section-label">WHAT YOU CAN DO</div>
+
               <h2>
                 Build your business <span>with direction.</span>
               </h2>
@@ -272,7 +281,6 @@ function App() {
           </div>
 
           <div className="feature-grid">
-
             <article className="feature-card purple">
               <div className="feature-number">01 / ASSESSMENT</div>
               <div className="feature-icon">◈</div>
@@ -314,7 +322,6 @@ function App() {
 
               <a href="#alur">Explore feature ↗</a>
             </article>
-
           </div>
         </section>
 
@@ -327,7 +334,6 @@ function App() {
           </h2>
 
           <div className="steps">
-
             <div className="step">
               <span>01</span>
               <h3>Create Account</h3>
@@ -353,7 +359,6 @@ function App() {
               <h3>Get Consultation</h3>
               <p>Ajukan konsultasi untuk langkah berikutnya.</p>
             </div>
-
           </div>
         </section>
 
@@ -385,11 +390,7 @@ function App() {
             <span>→</span>
           </button>
         </section>
-
       </main>
-
-      {/* API STATUS */}
-      <ApiStatus />
 
       {/* FOOTER */}
       <footer className="footer">
@@ -402,7 +403,9 @@ function App() {
         <small>© 2026 Startiva. All rights reserved.</small>
       </footer>
 
-      {/* LOGIN & REGISTER MODAL */}
+      <ApiStatus />
+
+      {/* AUTH MODAL */}
       {authMode && (
         <AuthModal
           mode={authMode}
@@ -410,7 +413,6 @@ function App() {
           onSuccess={handleAuthSuccess}
         />
       )}
-
     </div>
   );
 }
