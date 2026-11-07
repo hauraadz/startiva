@@ -1,5 +1,6 @@
 
 import './App.css'
+import ApiStatus from "./components/ApiStatus";
 
 function App() {
   return (
@@ -212,7 +213,7 @@ function App() {
           </a>
         </section>
       </main>
-
+<ApiStatus />
       {/* Footer */}
       <footer className="footer">
         <a href="#" className="logo">startiva<span>.</span></a>
