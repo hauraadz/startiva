@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\BusinessProfile;
 
 class User extends Authenticatable
+{   
+    public function businessProfile()
 {
+    return $this->hasOne(BusinessProfile::class);
+}
     use HasApiTokens, HasFactory, Notifiable;
 
     /**

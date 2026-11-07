@@ -1,0 +1,78 @@
+
+.business-profile-page {
+  padding: 32px;
+  background: #f8f7ff;
+  min-height: 100vh;
+}
+
+.business-profile-card {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 32px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(80, 60, 140, 0.08);
+}
+
+.business-profile-card h2 {
+  color: #30245f;
+  margin-bottom: 8px;
+}
+
+.business-profile-card > p {
+  color: #77718a;
+  margin-bottom: 28px;
+}
+
+.business-profile-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.business-profile-card label {
+  color: #40366b;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.business-profile-card input,
+.business-profile-card select,
+.business-profile-card textarea {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #e3def3;
+  border-radius: 10px;
+  font: inherit;
+  outline: none;
+}
+
+.business-profile-card textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.business-profile-card input:focus,
+.business-profile-card select:focus,
+.business-profile-card textarea:focus {
+  border-color: #8b78d8;
+}
+
+.business-profile-card button {
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #7965c8;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.success-message {
+  color: #25834d;
+}
+
+.error-message {
+  color: #c03939;
+}

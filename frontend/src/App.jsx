@@ -1,13 +1,104 @@
 
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+
 import ApiStatus from "./components/ApiStatus";
+import AuthModal from "./components/AuthModal";
+import StudentDashboard from "./components/StudentDashboard";
+import BusinessProfile from "./components/BusinessProfile";
 
 function App() {
+  const [authMode, setAuthMode] = useState(null);
+  const [currentPage, setCurrentPage] = useState("dashboard");
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("startiva_user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // LOGIN / REGISTER BERHASIL
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    setCurrentPage("dashboard");
+    setAuthMode(null);
+  };
+
+  // LOGOUT
+  const handleLogout = async () => {
+    const token = localStorage.getItem("startiva_token");
+
+    try {
+      if (token) {
+        await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
+    localStorage.removeItem("startiva_token");
+    localStorage.removeItem("startiva_user");
+
+    setCurrentUser(null);
+    setCurrentPage("dashboard");
+    setAuthMode(null);
+  };
+
+  // JIKA SUDAH LOGIN
+  if (currentUser) {
+
+    // HALAMAN PROFIL BISNIS
+    if (currentPage === "business-profile") {
+      return (
+        <div>
+          <button
+            type="button"
+            onClick={() => setCurrentPage("dashboard")}
+            style={{
+              margin: "20px",
+              padding: "10px 18px",
+              border: "none",
+              borderRadius: "10px",
+              background: "#7965c8",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: "600",
+            }}
+          >
+            ← Kembali ke Dashboard
+          </button>
+
+          <BusinessProfile />
+        </div>
+      );
+    }
+
+    // HALAMAN DASHBOARD
+    return (
+      <StudentDashboard
+        user={currentUser}
+        onLogout={handleLogout}
+        onOpenProfile={() => setCurrentPage("business-profile")}
+      />
+    );
+  }
+
+  // JIKA BELUM LOGIN, TAMPILKAN LANDING PAGE
   return (
     <div className="app">
-      {/* Navbar */}
+
+      {/* NAVBAR */}
       <header className="navbar">
-        <a href="#" className="logo">
+        <a href="#beranda" className="logo">
           startiva<span>.</span>
         </a>
 
@@ -19,15 +110,27 @@ function App() {
         </nav>
 
         <div className="nav-actions">
-          <a href="#login" className="login-link">Masuk</a>
-          <a href="#daftar" className="btn-primary small">
+          <button
+            type="button"
+            className="login-link"
+            onClick={() => setAuthMode("login")}
+          >
+            Masuk
+          </button>
+
+          <button
+            type="button"
+            className="btn-primary small"
+            onClick={() => setAuthMode("register")}
+          >
             Daftar Sekarang
-          </a>
+          </button>
         </div>
       </header>
 
-      {/* Hero */}
       <main>
+
+        {/* HERO */}
         <section className="hero" id="beranda">
           <div className="hero-content">
             <div className="eyebrow">
@@ -47,9 +150,15 @@ function App() {
             </p>
 
             <div className="hero-actions">
-              <a href="#fitur" className="btn-primary">
-                Mulai Perjalanan <span>→</span>
-              </a>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setAuthMode("register")}
+              >
+                Mulai Perjalanan
+                <span>→</span>
+              </button>
+
               <a href="#tentang" className="btn-secondary">
                 Pelajari Lebih Lanjut
               </a>
@@ -81,6 +190,7 @@ function App() {
                   <div className="sparkle three">✦</div>
                 </div>
               </div>
+
               <div className="illustration-label">
                 <span>01</span>
                 <strong>IDEA TO REALITY</strong>
@@ -101,14 +211,16 @@ function App() {
           </div>
         </section>
 
-        {/* About */}
+        {/* ABOUT */}
         <section className="about section" id="tentang">
           <div className="section-label">ABOUT STARTIVA</div>
+
           <h2>
             Every big business
             <br />
             starts with <span>one idea.</span>
           </h2>
+
           <p>
             Startiva merupakan platform digital yang membantu mahasiswa
             memahami kesiapan bisnis melalui asesmen dan mendapatkan
@@ -116,13 +228,16 @@ function App() {
           </p>
         </section>
 
-        {/* Features */}
+        {/* FEATURES */}
         <section className="features section" id="fitur">
           <div className="section-heading">
             <div>
               <div className="section-label">WHAT YOU CAN DO</div>
-              <h2>Build your business <span>with direction.</span></h2>
+              <h2>
+                Build your business <span>with direction.</span>
+              </h2>
             </div>
+
             <p>
               Mulai dari menemukan ide hingga memahami langkah
               pengembangan bisnis.
@@ -130,98 +245,147 @@ function App() {
           </div>
 
           <div className="feature-grid">
+
             <article className="feature-card purple">
               <div className="feature-number">01 / ASSESSMENT</div>
               <div className="feature-icon">◈</div>
+
               <h3>Business Assessment</h3>
+
               <p>
                 Kenali tingkat kesiapan dan potensi bisnis melalui
                 asesmen yang terstruktur.
               </p>
+
               <a href="#alur">Explore feature ↗</a>
             </article>
 
             <article className="feature-card peach">
               <div className="feature-number">02 / CONSULTATION</div>
               <div className="feature-icon">✳</div>
+
               <h3>Business Consultation</h3>
+
               <p>
                 Dapatkan arahan untuk mengembangkan ide, produk,
                 pemasaran, dan pengelolaan bisnis.
               </p>
+
               <a href="#alur">Explore feature ↗</a>
             </article>
 
             <article className="feature-card green">
               <div className="feature-number">03 / DEVELOPMENT</div>
               <div className="feature-icon">↗</div>
+
               <h3>Growth Direction</h3>
+
               <p>
                 Pahami hasil asesmen dan temukan area yang perlu
                 ditingkatkan dalam perjalanan bisnismu.
               </p>
+
               <a href="#alur">Explore feature ↗</a>
             </article>
+
           </div>
         </section>
 
-        {/* Workflow */}
+        {/* WORKFLOW */}
         <section className="workflow section" id="alur">
           <div className="section-label">SIMPLE PROCESS</div>
-          <h2>Start with a step, <span>grow with purpose.</span></h2>
+
+          <h2>
+            Start with a step, <span>grow with purpose.</span>
+          </h2>
 
           <div className="steps">
+
             <div className="step">
               <span>01</span>
               <h3>Create Account</h3>
               <p>Daftar dan lengkapi profil mahasiswa.</p>
             </div>
+
             <div className="step">
               <span>02</span>
               <h3>Take Assessment</h3>
               <p>Isi asesmen sesuai kondisi dan kebutuhanmu.</p>
             </div>
+
             <div className="step">
               <span>03</span>
               <h3>View Your Result</h3>
-              <p>Pahami hasil dan aspek bisnis yang perlu dikembangkan.</p>
+              <p>
+                Pahami hasil dan aspek bisnis yang perlu dikembangkan.
+              </p>
             </div>
+
             <div className="step">
               <span>04</span>
               <h3>Get Consultation</h3>
               <p>Ajukan konsultasi untuk langkah berikutnya.</p>
             </div>
+
           </div>
         </section>
 
         {/* CTA */}
         <section className="cta section" id="daftar">
           <div>
-            <div className="section-label">YOUR JOURNEY STARTS HERE</div>
+            <div className="section-label">
+              YOUR JOURNEY STARTS HERE
+            </div>
+
             <h2>
               Ready to turn your
               <br />
               idea into <span>something real?</span>
             </h2>
+
             <p>
               Tidak harus sudah punya bisnis. Kamu bisa mulai
               dari ide, potensi, dan rasa ingin tahu.
             </p>
           </div>
-          <a href="#login" className="btn-light">
-            Get Started <span>→</span>
-          </a>
+
+          <button
+            type="button"
+            className="btn-light"
+            onClick={() => setAuthMode("register")}
+          >
+            Get Started
+            <span>→</span>
+          </button>
         </section>
+
       </main>
-<ApiStatus />
-      {/* Footer */}
+
+      {/* API STATUS */}
+      <ApiStatus />
+
+      {/* FOOTER */}
       <footer className="footer">
-        <a href="#" className="logo">startiva<span>.</span></a>
+        <a href="#beranda" className="logo">
+          startiva<span>.</span>
+        </a>
+
         <p>Assess. Consult. Grow.</p>
+
         <small>© 2026 Startiva. All rights reserved.</small>
       </footer>
+
+      {/* LOGIN & REGISTER MODAL */}
+      {authMode && (
+        <AuthModal
+          mode={authMode}
+          onClose={() => setAuthMode(null)}
+          onSuccess={handleAuthSuccess}
+        />
+      )}
+
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
