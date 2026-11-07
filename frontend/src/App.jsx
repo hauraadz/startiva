@@ -8,6 +8,8 @@ import BusinessProfile from "./components/BusinessProfile";
 import BusinessAssessment from "./pages/BusinessAssessment";
 import AssessmentHistory from "./pages/AssessmentHistory";
 import Consultation from "./pages/Consultation";
+import AssessmentStatistics from "./pages/AssessmentStatistics";
+import AIChat from "./pages/AIChat";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
@@ -99,6 +101,8 @@ function App() {
               onOpenAssessment={() => navigateTo("business-assessment")}
               onOpenHistory={() => navigateTo("assessment-history")}
               onOpenConsultation={() => navigateTo("consultation")}
+              onOpenStatistics={() => navigateTo("assessment-statistics")}
+              onOpenAI={() => navigateTo("ai-assistant")}
             />
           )}
 
@@ -117,6 +121,14 @@ function App() {
           {currentPage === "consultation" && (
             <Consultation />
           )}
+
+          {currentPage === "assessment-statistics" && (
+            <AssessmentStatistics />
+          )}
+
+          {currentPage === "ai-assistant" && (
+            <AIChat />
+          )}
         </main>
 
         <ApiStatus />
@@ -127,7 +139,6 @@ function App() {
   // LANDING PAGE SEBELUM LOGIN
   return (
     <div className="app landing-app">
-      {/* NAVBAR */}
       <header className="navbar">
         <a href="#beranda" className="logo">
           startiva<span>.</span>

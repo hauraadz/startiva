@@ -30,4 +30,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'hermes' => [
+    'url' => env('HERMES_API_URL', 'http://127.0.0.1:8642'),
+    'key' => env('HERMES_API_KEY'),
+    ],
 ];

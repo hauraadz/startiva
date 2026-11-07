@@ -553,3 +553,54 @@
 .dashboard-feature-button {
   margin-top: 15px;
 }
+
+
+/* ASSESSMENT STATISTICS */
+.dashboard-feature-card {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-feature-card p {
+  flex: 1;
+}
+
+.dashboard-feature-button {
+  margin-top: auto;
+  min-height: 38px;
+}
+
+.sidebar-menu a {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* RESPONSIVE FEATURE CARDS */
+@media (max-width: 900px) {
+  .dashboard-feature-grid {
+    gap: 14px;
+  }
+
+  .dashboard-feature-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .sidebar-menu a {
+    flex-shrink: 0;
+  }
+
+  .dashboard-feature-card {
+    min-height: 210px;
+  }
+}
+
+.ai-assistant-card {
+  background: linear-gradient(135deg, #f0edff, #faf5ff);
+  border: 1px solid #e5dcff;
+}
+
+.ai-assistant-card .dashboard-card-icon {
+  color: #7866cf;
+}

@@ -1,0 +1,199 @@
+.statistics-page {
+  padding: 28px;
+  color: #292638;
+}
+
+.statistics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.statistics-header h1 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.statistics-header p,
+.statistics-panel-description {
+  color: #888397;
+  font-size: 14px;
+  margin: 0;
+}
+
+.statistics-refresh {
+  border: none;
+  background: #7a6cff;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.statistics-card,
+.statistics-panel {
+  background: white;
+  border: 1px solid #eeeaf5;
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.statistics-card p {
+  font-size: 14px;
+  color: #898397;
+  margin: 0 0 15px;
+}
+
+.statistics-card h2 {
+  font-size: 28px;
+  margin: 0 0 8px;
+  color: #7a6cff;
+}
+
+.statistics-card span {
+  color: #9993a5;
+  font-size: 12px;
+}
+
+.statistics-content-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+}
+
+.statistics-panel h3 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.statistics-panel-header p {
+  color: #9993a5;
+  font-size: 13px;
+  margin: 0;
+}
+
+.frequency-chart {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.frequency-row {
+  display: grid;
+  grid-template-columns: 65px 1fr 30px;
+  align-items: center;
+  gap: 12px;
+}
+
+.frequency-label {
+  font-size: 13px;
+  color: #777184;
+}
+
+.frequency-track {
+  height: 12px;
+  background: #f0edfa;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.frequency-bar {
+  height: 100%;
+  background: #897bfa;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+.frequency-row strong {
+  font-size: 13px;
+  text-align: right;
+}
+
+.frequency-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 28px;
+  color: #898397;
+  font-size: 11px;
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 17px 0;
+  border-bottom: 1px solid #f0edf5;
+  font-size: 13px;
+}
+
+.analysis-item:last-child {
+  border-bottom: none;
+}
+
+.analysis-item span {
+  color: #898397;
+}
+
+.analysis-item strong {
+  color: #7a6cff;
+}
+
+.statistics-footer {
+  margin-top: 20px;
+  text-align: right;
+  font-size: 12px;
+  color: #9993a5;
+}
+
+.statistics-message {
+  background: white;
+  border: 1px solid #eeeaf5;
+  border-radius: 12px;
+  padding: 25px;
+  color: #777184;
+}
+
+.statistics-message.error {
+  color: #d34b62;
+}
+
+@media (max-width: 900px) {
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statistics-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+  .statistics-page {
+    padding: 16px;
+  }
+
+  .statistics-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .frequency-legend {
+    grid-template-columns: 1fr;
+  }
+}

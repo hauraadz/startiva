@@ -1,3 +1,4 @@
+
 import "./StudentDashboard.css";
 
 function StudentDashboard({
@@ -7,6 +8,8 @@ function StudentDashboard({
   onOpenAssessment,
   onOpenHistory,
   onOpenConsultation,
+  onOpenStatistics,
+  onOpenAI,
 }) {
   const firstName = user?.name?.split(" ")[0] || "Mahasiswa";
 
@@ -52,7 +55,6 @@ function StudentDashboard({
             Business Assessment
           </a>
 
-          {/* ASSESSMENT HISTORY */}
           <a
             href="#assessment-history"
             onClick={(e) => {
@@ -64,7 +66,17 @@ function StudentDashboard({
             Assessment History
           </a>
 
-          {/* CONSULTATION */}
+          <a
+            href="#assessment-statistics"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenStatistics?.();
+            }}
+          >
+            <span>▥</span>
+            Assessment Statistics
+          </a>
+
           <a
             href="#consultation"
             onClick={(e) => {
@@ -76,7 +88,18 @@ function StudentDashboard({
             Consultation
           </a>
 
-          {/* MY PROFILE */}
+          {/* AI BUSINESS ASSISTANT */}
+          <a
+            href="#ai-assistant"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenAI?.();
+            }}
+          >
+            <span>✧</span>
+            AI Business Assistant
+          </a>
+
           <a
             href="#profile"
             onClick={(e) => {
@@ -291,11 +314,34 @@ function StudentDashboard({
               </button>
             </article>
 
-            {/* BUSINESS CONSULTATION */}
+            {/* ASSESSMENT STATISTICS */}
             <article className="dashboard-feature-card consultation-card">
               <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">✳</span>
+                <span className="dashboard-card-icon">▥</span>
                 <span className="dashboard-card-number">04</span>
+              </div>
+
+              <h3>Assessment Statistics</h3>
+
+              <p>
+                Lihat ringkasan hasil asesmen, rata-rata skor,
+                distribusi jawaban, dan analisis kesiapan bisnis.
+              </p>
+
+              <button
+                type="button"
+                className="dashboard-feature-button"
+                onClick={onOpenStatistics}
+              >
+                Lihat Statistik →
+              </button>
+            </article>
+
+            {/* BUSINESS CONSULTATION */}
+            <article className="dashboard-feature-card assessment-card">
+              <div className="dashboard-card-top">
+                <span className="dashboard-card-icon">✳</span>
+                <span className="dashboard-card-number">05</span>
               </div>
 
               <h3>Business Consultation</h3>
@@ -312,6 +358,30 @@ function StudentDashboard({
                 onClick={onOpenConsultation}
               >
                 Ajukan Konsultasi →
+              </button>
+            </article>
+
+            {/* AI BUSINESS ASSISTANT */}
+            <article className="dashboard-feature-card ai-assistant-card">
+              <div className="dashboard-card-top">
+                <span className="dashboard-card-icon">✧</span>
+                <span className="dashboard-card-number">06</span>
+              </div>
+
+              <h3>AI Business Assistant</h3>
+
+              <p>
+                Diskusikan ide bisnis, temukan inspirasi produk,
+                dan dapatkan rekomendasi pengembangan bisnis
+                bersama asisten AI Startiva.
+              </p>
+
+              <button
+                type="button"
+                className="dashboard-feature-button"
+                onClick={onOpenAI}
+              >
+                Mulai Diskusi AI →
               </button>
             </article>
 

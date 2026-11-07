@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BusinessProfileController;
 use App\Http\Controllers\Api\BusinessAssessmentController;
 use App\Http\Controllers\Api\ConsultationController;
+use App\Http\Controllers\Api\N8nAssessmentController;
+use App\Http\Controllers\Api\AssessmentStatisticController;
+use App\Http\Controllers\Api\AIController;
 
 // Test koneksi API
 Route::get('/test', function () {
@@ -35,9 +38,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/business-assessment', [BusinessAssessmentController::class, 'index']);
     Route::get('/business-assessment/latest', [BusinessAssessmentController::class, 'latest']);
 
+    // AI Business Assistant
+    Route::post('/ai/chat', [AIController::class, 'chat']);
+
     // BUSINESS CONSULTATION
     Route::get('/consultations', [ConsultationController::class, 'index']);
     Route::post('/consultations', [ConsultationController::class, 'store']);
     Route::get('/consultations/{id}', [ConsultationController::class, 'show']);
+    
+    // Assessment Statistics
+    Route::get('/assessment-statistics/latest', [
+        AssessmentStatisticController::class,
+        'latest'
+    ]);
 
 });
+
+Route::get('/n8n/assessment-data', [
+    N8nAssessmentController::class,
+    'getAssessmentData'
+]);
+
+Route::post('/n8n/assessment-statistics', [
+    N8nAssessmentController::class,
+    'storeStatistics'
+]);
