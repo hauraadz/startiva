@@ -3,6 +3,12 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API Startiva berhasil terhubung!'
+    ]);
+});
 /*
 |--------------------------------------------------------------------------
 | API Routes
