@@ -1,7 +1,12 @@
 
 import "./StudentDashboard.css";
 
-function StudentDashboard({ user, onLogout, onOpenProfile }) {
+function StudentDashboard({
+  user,
+  onLogout,
+  onOpenProfile,
+  onOpenAssessment,
+}) {
   const firstName = user?.name?.split(" ")[0] || "Mahasiswa";
 
   return (
@@ -15,7 +20,11 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
         <div className="sidebar-label">MENU UTAMA</div>
 
         <nav className="sidebar-menu">
-          <a href="#dashboard" className="active">
+          <a
+            href="#dashboard"
+            className="active"
+            onClick={(e) => e.preventDefault()}
+          >
             <span>⌂</span>
             Dashboard
           </a>
@@ -31,12 +40,23 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
             Business Profile
           </a>
 
-          <a href="#assessment">
+          <a
+            href="#assessment"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenAssessment?.();
+            }}
+          >
             <span>◈</span>
             Business Assessment
           </a>
 
-          <a href="#consultation">
+          <a
+            href="#consultation"
+            onClick={(e) => e.preventDefault()}
+            className="disabled-menu"
+            title="Fitur konsultasi belum tersedia"
+          >
             <span>✳</span>
             Consultation
           </a>
@@ -61,7 +81,7 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
             </div>
 
             <div className="user-info">
-              <strong>{user?.name}</strong>
+              <strong>{user?.name || "Mahasiswa"}</strong>
               <small>Student Account</small>
             </div>
           </div>
@@ -78,12 +98,14 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
 
       {/* MAIN DASHBOARD */}
       <main className="dashboard-main" id="dashboard">
+
         {/* HEADER */}
         <header className="dashboard-header">
           <div>
             <span className="dashboard-date">
               STUDENT WORKSPACE
             </span>
+
             <h1>Dashboard</h1>
           </div>
 
@@ -91,7 +113,8 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
             <div className="user-avatar">
               {firstName.charAt(0).toUpperCase()}
             </div>
-            <span>{user?.name}</span>
+
+            <span>{user?.name || "Mahasiswa"}</span>
           </div>
         </header>
 
@@ -137,6 +160,7 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
               <span className="dashboard-eyebrow">
                 YOUR PROGRESS
               </span>
+
               <h2>Business Journey</h2>
             </div>
           </div>
@@ -156,7 +180,9 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
                 <div className="progress-fill"></div>
               </div>
 
-              <small>Belum ada asesmen yang diselesaikan</small>
+              <small>
+                Belum ada asesmen yang diselesaikan
+              </small>
             </div>
 
             <span className="progress-status">
@@ -172,11 +198,13 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
               <span className="dashboard-eyebrow">
                 EXPLORE STARTIVA
               </span>
+
               <h2>What would you like to do?</h2>
             </div>
           </div>
 
           <div className="dashboard-feature-grid">
+
             {/* BUSINESS PROFILE */}
             <article className="dashboard-feature-card assessment-card">
               <div className="dashboard-card-top">
@@ -211,13 +239,17 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
 
               <p>
                 Kenali kesiapan bisnismu melalui asesmen yang
-                mencakup ide, produk, pemasaran, keuangan,
-                dan pengelolaan bisnis.
+                mencakup produk, pasar, pemasaran, keuangan,
+                dan operasional bisnis.
               </p>
 
-              <span className="feature-coming-soon">
-                Assessment · Coming soon
-              </span>
+              <button
+                type="button"
+                className="dashboard-feature-button"
+                onClick={onOpenAssessment}
+              >
+                Mulai Assessment →
+              </button>
             </article>
 
             {/* BUSINESS CONSULTATION */}
@@ -239,6 +271,7 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
                 Consultation · Coming soon
               </span>
             </article>
+
           </div>
         </section>
 
@@ -265,6 +298,7 @@ function StudentDashboard({ user, onLogout, onOpenProfile }) {
           <span>startiva.</span>
           <small>Assess. Consult. Grow. © 2026</small>
         </footer>
+
       </main>
     </div>
   );

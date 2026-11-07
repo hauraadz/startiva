@@ -11,10 +11,16 @@ use App\Models\BusinessProfile;
 
 class User extends Authenticatable
 {   
-    public function businessProfile()
-{
-    return $this->hasOne(BusinessProfile::class);
-}
+    
+    public function businessAssessments()
+    {
+        return $this->hasMany(\App\Models\BusinessAssessment::class);
+    }
+
+        public function businessProfile()
+    {
+        return $this->hasOne(BusinessProfile::class);
+    }
     use HasApiTokens, HasFactory, Notifiable;
 
     /**

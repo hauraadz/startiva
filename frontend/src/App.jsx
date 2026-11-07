@@ -6,6 +6,7 @@ import ApiStatus from "./components/ApiStatus";
 import AuthModal from "./components/AuthModal";
 import StudentDashboard from "./components/StudentDashboard";
 import BusinessProfile from "./components/BusinessProfile";
+import BusinessAssessment from "./pages/BusinessAssessment";
 
 function App() {
   const [authMode, setAuthMode] = useState(null);
@@ -53,46 +54,72 @@ function App() {
     setAuthMode(null);
   };
 
-  // JIKA SUDAH LOGIN
-  if (currentUser) {
+  // TOMBOL KEMBALI
+  const handleBackToDashboard = () => {
+    setCurrentPage("dashboard");
+  };
 
-    // HALAMAN PROFIL BISNIS
-    if (currentPage === "business-profile") {
-      return (
-        <div>
-          <button
-            type="button"
-            onClick={() => setCurrentPage("dashboard")}
+  // HALAMAN PENGGUNA YANG SUDAH LOGIN
+  if (currentUser) {
+    return (
+      <div className="app">
+        {/* NAVIGASI HALAMAN */}
+        {currentPage !== "dashboard" && (
+          <div
             style={{
-              margin: "20px",
-              padding: "10px 18px",
-              border: "none",
-              borderRadius: "10px",
-              background: "#7965c8",
-              color: "white",
-              cursor: "pointer",
-              fontWeight: "600",
+              padding: "18px 24px",
+              background: "#fff",
+              borderBottom: "1px solid #eee",
             }}
           >
-            ← Kembali ke Dashboard
-          </button>
+            <button
+              type="button"
+              onClick={handleBackToDashboard}
+              style={{
+                padding: "10px 18px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#7965c8",
+                color: "#fff",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              ← Kembali ke Dashboard
+            </button>
+          </div>
+        )}
 
+        {/* HALAMAN PROFIL BISNIS */}
+        {currentPage === "business-profile" && (
           <BusinessProfile />
-        </div>
-      );
-    }
+        )}
 
-    // HALAMAN DASHBOARD
-    return (
-      <StudentDashboard
-        user={currentUser}
-        onLogout={handleLogout}
-        onOpenProfile={() => setCurrentPage("business-profile")}
-      />
+        {/* HALAMAN BUSINESS ASSESSMENT */}
+        {currentPage === "business-assessment" && (
+          <BusinessAssessment />
+        )}
+
+        {/* HALAMAN DASHBOARD */}
+        {currentPage === "dashboard" && (
+          <StudentDashboard
+            user={currentUser}
+            onLogout={handleLogout}
+            onOpenProfile={() =>
+              setCurrentPage("business-profile")
+            }
+            onOpenAssessment={() =>
+              setCurrentPage("business-assessment")
+            }
+          />
+        )}
+
+        <ApiStatus />
+      </div>
     );
   }
 
-  // JIKA BELUM LOGIN, TAMPILKAN LANDING PAGE
+  // LANDING PAGE JIKA BELUM LOGIN
   return (
     <div className="app">
 
