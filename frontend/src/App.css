@@ -58,53 +58,110 @@ a {
   background: #ffffff;
 }
 
+
 /* =========================
    AUTHENTICATED PAGES
 ========================= */
 
 .authenticated-app {
-  background: #f8f7fc;
+  background: #fffafa;
   min-height: 100vh;
 }
 
 .authenticated-content {
   min-height: calc(100vh - 70px);
+  padding-top: 78px;
 }
+
+/* =========================
+   STICKY PAGE NAVIGATION
+========================= */
 
 .page-navigation {
   width: 100%;
-  min-height: 70px;
-  padding: 14px max(24px, calc((100% - 1240px) / 2));
+  min-height: 64px;
+  padding: 10px max(24px, calc((100% - 1240px) / 2));
+
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border-bottom: 1px solid #efedf4;
-  position: relative;
-  z-index: 10;
+
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #f0e5e5;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
+
+/* =========================
+   BACK BUTTON
+========================= */
 
 .back-dashboard-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 11px 17px;
-  color: #6e5ac6;
-  background: #f3f0ff;
-  border: 1px solid #e9e3ff;
-  border-radius: 9px;
+
+  min-height: 40px;
+  padding: 9px 16px;
+
+  color: #ad3d46;
+  background: #fff0f0;
+  border: 1px solid #f5dada;
+  border-radius: 10px;
+
   font-size: 12px;
   font-weight: 700;
-  transition: .2s ease;
+
+  transition: all 0.2s ease;
 }
 
 .back-dashboard-button:hover {
-  background: #eae4ff;
-  transform: translateX(-2px);
+  color: #922f38;
+  background: #ffe5e5;
+  border-color: #edc2c4;
+  transform: translateX(-3px);
+}
+
+.back-dashboard-button:active {
+  transform: scale(0.97);
+}
+
+.back-dashboard-button:focus-visible {
+  outline: 3px solid #e6a1a4;
+  outline-offset: 3px;
 }
 
 .back-arrow {
-  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   line-height: 1;
+}
+
+/* MOBILE */
+
+@media (max-width: 560px) {
+  .authenticated-content {
+    padding-top: 66px;
+  }
+
+  .page-navigation {
+    min-height: 58px;
+    padding: 9px 16px;
+  }
+
+  .back-dashboard-button {
+    min-height: 37px;
+    padding: 8px 13px;
+    font-size: 11px;
+  }
 }
 
 /* =========================
@@ -858,6 +915,191 @@ textarea:focus-visible {
 /* =========================
    REDUCED MOTION
 ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+/* =========================================
+   STARTIVA RED THEME OVERRIDE
+   Letakkan di bagian paling bawah App.css
+========================================= */
+
+:root {
+  --primary: #c94b52;
+  --primary-dark: #a93640;
+  --primary-light: #fff0f0;
+  --text-main: #302b35;
+  --text-muted: #85808a;
+  --border: #f0e5e5;
+}
+
+:root,
+body {
+  color: #302b35;
+  background: #fffafa;
+}
+
+.authenticated-app {
+  background: #fffafa;
+}
+
+.page-navigation {
+  background: #ffffff;
+  border-bottom-color: #f0e5e5;
+}
+
+.back-dashboard-button {
+  color: #ad3d46;
+  background: #fff0f0;
+  border-color: #f5dada;
+}
+
+.back-dashboard-button:hover {
+  color: #922f38;
+  background: #ffe5e5;
+}
+
+.logo span {
+  color: #c94b52;
+}
+
+.navbar-menu a:hover,
+.login-link:hover {
+  color: #c94b52;
+}
+
+.btn-primary {
+  background: #c94b52;
+  box-shadow: 0 8px 22px #c94b5233;
+}
+
+.btn-primary:hover {
+  background: #a93640;
+  box-shadow: 0 12px 25px #c94b5244;
+}
+
+.btn-secondary:hover {
+  border-color: #c94b52;
+  color: #a93640;
+}
+
+.btn-light {
+  color: #b43d47;
+}
+
+.eyebrow,
+.section-label {
+  color: #c94b52;
+}
+
+.eyebrow {
+  background: #fff0f0;
+}
+
+.status-dot {
+  background: #c94b52;
+}
+
+.hero h1 span,
+.section h2 span {
+  color: #c94b52;
+}
+
+.hero-note span {
+  color: #c94b52;
+}
+
+.visual-glow {
+  background: #fff0f0;
+}
+
+.illustration-circle {
+  background: #f5c9cb;
+  box-shadow: 20px 25px 0 #fbe5e5;
+}
+
+.inner-circle {
+  background: linear-gradient(140deg, #e98b8f, #bd414b);
+  box-shadow: inset -15px -15px 30px #9e303966;
+}
+
+.illustration-label span {
+  color: #c94b52;
+}
+
+.card-icon {
+  background: #fff0f0;
+  color: #c94b52;
+}
+
+.decor {
+  color: #d98287;
+}
+
+.about,
+.workflow {
+  background: #fff7f7;
+}
+
+.feature-card.purple {
+  background: #fff0f0;
+}
+
+.feature-card.peach {
+  background: #fff3ec;
+}
+
+.feature-card.green {
+  background: #f0f6f0;
+}
+
+.feature-icon {
+  color: #c94b52;
+}
+
+.feature-card a {
+  color: #b43d47;
+}
+
+.step {
+  border-top-color: #efd1d2;
+}
+
+.step > span {
+  color: #c94b52;
+}
+
+.cta {
+  background: linear-gradient(120deg, #a93640, #d45d64);
+}
+
+.cta .section-label {
+  color: #ffe0e1;
+}
+
+.cta h2 span {
+  color: #ffe0e1;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: #e6a1a4;
+}
+
+/* Warna kartu dan dekorasi tambahan */
+.mini-avatar {
+  background: #ffe3df;
+  color: #ad5b55;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

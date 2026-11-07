@@ -1,20 +1,34 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./AssessmentStatistics.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+
+function formatNumber(value, digits = 2) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toFixed(digits) : "0.00";
+}
+
+function formatDate(date) {
+  if (!date) return "-";
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return "-";
+
+  return parsedDate.toLocaleString("id-ID", {
+    dateStyle: "long",
+    timeStyle: "short",
+  });
+}
 
 export default function AssessmentStatistics() {
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchStatistics();
-  }, []);
-
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -26,7 +40,7 @@ export default function AssessmentStatistics() {
       }
 
       const response = await fetch(
-        `${API_URL}/assessment-statistics/latest`,
+        `${API_URL.replace(/\/$/, "")}/assessment-statistics/latest`,
         {
           method: "GET",
           headers: {
@@ -44,7 +58,7 @@ export default function AssessmentStatistics() {
         );
       }
 
-      setStatistics(result.data);
+      setStatistics(result.data || null);
     } catch (err) {
       setError(
         err.message || "Terjadi kesalahan saat mengambil data statistik."
@@ -52,21 +66,18 @@ export default function AssessmentStatistics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleString("id-ID", {
-      dateStyle: "long",
-      timeStyle: "short",
-    });
-  };
+  useEffect(() => {
+    fetchStatistics();
+  }, [fetchStatistics]);
 
   const frequency = statistics?.frequency || {};
 
   const maxFrequency = Math.max(
-    ...Object.values(frequency).map(Number),
+    ...[1, 2, 3, 4].map((score) =>
+      Number(frequency[String(score)] || 0)
+    ),
     1
   );
 
@@ -75,31 +86,39 @@ export default function AssessmentStatistics() {
       label: "Total Assessment",
       value: statistics?.total_assessments ?? 0,
       description: "Assessment yang telah dikerjakan",
+      icon: "01",
+      style: "red",
     },
     {
       label: "Total Jawaban",
       value: statistics?.total_responses ?? 0,
       description: "Seluruh jawaban responden",
+      icon: "02",
+      style: "peach",
     },
     {
       label: "Rata-rata Kesiapan",
-      value: `${Number(
-        statistics?.average_score_percentage ?? 0
-      ).toFixed(2)}%`,
+      value: `${formatNumber(statistics?.average_score_percentage)}%`,
       description: "Persentase kesiapan bisnis",
+      icon: "%",
+      style: "rose",
     },
     {
       label: "Mean",
-      value: Number(statistics?.mean ?? 0).toFixed(2),
+      value: formatNumber(statistics?.mean),
       description: "Rata-rata skor jawaban",
+      icon: "μ",
+      style: "dark",
     },
   ];
 
   if (loading) {
     return (
       <div className="statistics-page">
-        <div className="statistics-message">
-          Memuat data statistik...
+        <div className="statistics-loading">
+          <div className="statistics-loader" />
+          <h3>Memuat data statistik</h3>
+          <p>Mohon tunggu sebentar...</p>
         </div>
       </div>
     );
@@ -110,24 +129,30 @@ export default function AssessmentStatistics() {
       <div className="statistics-page">
         <div className="statistics-header">
           <div>
+            <span className="statistics-eyebrow">
+              STARTIVA ANALYTICS
+            </span>
             <h1>Dashboard Statistik</h1>
             <p>
-              Ringkasan hasil Business Assessment Startiva.
+              Ringkasan hasil pengolahan Business Assessment Startiva.
             </p>
           </div>
         </div>
 
-        <div className="statistics-message error">
-          {error}
+        <div className="statistics-error">
+          <div className="statistics-error-icon">!</div>
+          <div>
+            <h3>Data belum dapat dimuat</h3>
+            <p>{error}</p>
+            <button
+              type="button"
+              className="statistics-refresh"
+              onClick={fetchStatistics}
+            >
+              Coba Lagi
+            </button>
+          </div>
         </div>
-
-        <button
-          type="button"
-          className="statistics-refresh"
-          onClick={fetchStatistics}
-        >
-          Coba Lagi
-        </button>
       </div>
     );
   }
@@ -135,31 +160,51 @@ export default function AssessmentStatistics() {
   if (!statistics) {
     return (
       <div className="statistics-page">
-        <h1>Dashboard Statistik</h1>
-
-        <div className="statistics-message">
-          Belum ada data statistik yang tersedia.
+        <div className="statistics-header">
+          <div>
+            <span className="statistics-eyebrow">
+              STARTIVA ANALYTICS
+            </span>
+            <h1>Dashboard Statistik</h1>
+            <p>
+              Ringkasan hasil pengolahan Business Assessment Startiva.
+            </p>
+          </div>
         </div>
 
-        <button
-          type="button"
-          className="statistics-refresh"
-          onClick={fetchStatistics}
-        >
-          Refresh Data
-        </button>
+        <div className="statistics-empty">
+          <div className="statistics-empty-icon">01</div>
+          <h3>Belum ada data statistik</h3>
+          <p>
+            Data statistik akan ditampilkan setelah hasil assessment
+            berhasil diproses.
+          </p>
+          <button
+            type="button"
+            className="statistics-refresh"
+            onClick={fetchStatistics}
+          >
+            Refresh Data
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="statistics-page">
-      {/* Header */}
-      <div className="statistics-header">
+      {/* HEADER */}
+      <header className="statistics-header">
         <div>
+          <span className="statistics-eyebrow">
+            STARTIVA ANALYTICS
+          </span>
+
           <h1>Dashboard Statistik</h1>
+
           <p>
             Ringkasan hasil pengolahan Business Assessment Startiva.
+            Pantau data dan distribusi jawaban responden.
           </p>
         </div>
 
@@ -169,122 +214,189 @@ export default function AssessmentStatistics() {
           onClick={fetchStatistics}
           disabled={loading}
         >
+          <span className="refresh-icon">↻</span>
           Refresh Data
         </button>
-      </div>
+      </header>
 
-      {/* Summary Cards */}
-      <div className="statistics-grid">
-        {cards.map((card, index) => (
-          <div className="statistics-card" key={index}>
-            <p>{card.label}</p>
+      {/* SUMMARY CARDS */}
+      <section className="statistics-grid">
+        {cards.map((card) => (
+          <article
+            className="statistics-card"
+            key={card.label}
+          >
+            <div className="statistics-card-top">
+              <span>{card.label}</span>
+              <div className={`statistics-card-icon ${card.style}`}>
+                {card.icon}
+              </div>
+            </div>
+
             <h2>{card.value}</h2>
-            <span>{card.description}</span>
-          </div>
+            <p>{card.description}</p>
+          </article>
         ))}
+      </section>
+
+      {/* SECTION TITLE */}
+      <div className="statistics-section-heading">
+        <div>
+          <span className="statistics-eyebrow">
+            DATA OVERVIEW
+          </span>
+          <h2>Analisis Hasil Assessment</h2>
+          <p>
+            Visualisasi distribusi jawaban dan ringkasan perhitungan statistik.
+          </p>
+        </div>
       </div>
 
-      {/* Statistics Content */}
+      {/* CONTENT */}
       <div className="statistics-content-grid">
-
-        {/* Frequency Chart */}
-        <section className="statistics-panel">
+        {/* FREQUENCY CHART */}
+        <section className="statistics-panel frequency-panel">
           <div className="statistics-panel-header">
             <div>
+              <span className="panel-kicker">RESPONSE DISTRIBUTION</span>
               <h3>Distribusi Jawaban</h3>
               <p>
                 Frekuensi jawaban berdasarkan skala penilaian 1–4.
               </p>
             </div>
+
+            <div className="panel-header-icon">▥</div>
           </div>
 
           <div className="frequency-chart">
             {[1, 2, 3, 4].map((score) => {
-              const count = Number(
-                frequency[String(score)] || 0
-              );
-
+              const count = Number(frequency[String(score)] || 0);
               const width = (count / maxFrequency) * 100;
 
               return (
                 <div className="frequency-row" key={score}>
-                  <span className="frequency-label">
-                    Skor {score}
-                  </span>
+                  <div className="frequency-label">
+                    <span className={`score-number score-${score}`}>
+                      {score}
+                    </span>
+                    <span>Skor {score}</span>
+                  </div>
 
-                  <div className="frequency-track">
+                  <div
+                    className="frequency-track"
+                    role="progressbar"
+                    aria-label={`Frekuensi skor ${score}`}
+                    aria-valuenow={count}
+                    aria-valuemin="0"
+                    aria-valuemax={maxFrequency}
+                  >
                     <div
-                      className="frequency-bar"
+                      className={`frequency-bar bar-${score}`}
                       style={{ width: `${width}%` }}
                     />
                   </div>
 
-                  <strong>{count}</strong>
+                  <strong className="frequency-count">
+                    {count}
+                  </strong>
                 </div>
               );
             })}
           </div>
 
           <div className="frequency-legend">
-            <span>1 = Sangat Tidak Setuju</span>
-            <span>2 = Tidak Setuju</span>
-            <span>3 = Setuju</span>
-            <span>4 = Sangat Setuju</span>
+            <div>
+              <span className="legend-dot dot-1" />
+              <span>1 — Sangat Tidak Setuju</span>
+            </div>
+            <div>
+              <span className="legend-dot dot-2" />
+              <span>2 — Tidak Setuju</span>
+            </div>
+            <div>
+              <span className="legend-dot dot-3" />
+              <span>3 — Setuju</span>
+            </div>
+            <div>
+              <span className="legend-dot dot-4" />
+              <span>4 — Sangat Setuju</span>
+            </div>
           </div>
         </section>
 
-        {/* Statistical Analysis */}
-        <section className="statistics-panel">
-          <h3>Analisis Statistik</h3>
+        {/* STATISTICAL ANALYSIS */}
+        <section className="statistics-panel analysis-panel">
+          <div className="statistics-panel-header">
+            <div>
+              <span className="panel-kicker">STATISTICAL SUMMARY</span>
+              <h3>Analisis Statistik</h3>
+              <p>
+                Ringkasan perhitungan dari seluruh jawaban assessment.
+              </p>
+            </div>
 
-          <p className="statistics-panel-description">
-            Ringkasan perhitungan dari seluruh jawaban assessment.
-          </p>
-
-          <div className="analysis-item">
-            <span>Mean</span>
-            <strong>
-              {Number(statistics.mean).toFixed(2)}
-            </strong>
+            <div className="panel-header-icon">∑</div>
           </div>
 
-          <div className="analysis-item">
-            <span>Standar Deviasi</span>
-            <strong>
-              {Number(statistics.standard_deviation).toFixed(2)}
-            </strong>
-          </div>
+          <div className="analysis-list">
+            <div className="analysis-item">
+              <div>
+                <strong>Mean</strong>
+                <small>Rata-rata skor jawaban</small>
+              </div>
+              <span>{formatNumber(statistics.mean)}</span>
+            </div>
 
-          <div className="analysis-item">
-            <span>Rata-rata Kesiapan</span>
-            <strong>
-              {Number(
-                statistics.average_score_percentage
-              ).toFixed(2)}%
-            </strong>
-          </div>
+            <div className="analysis-item">
+              <div>
+                <strong>Standar Deviasi</strong>
+                <small>Persebaran nilai jawaban</small>
+              </div>
+              <span>
+                {formatNumber(statistics.standard_deviation)}
+              </span>
+            </div>
 
-          <div className="analysis-item">
-            <span>Total Assessment</span>
-            <strong>
-              {statistics.total_assessments}
-            </strong>
-          </div>
+            <div className="analysis-item">
+              <div>
+                <strong>Rata-rata Kesiapan</strong>
+                <small>Persentase kesiapan bisnis</small>
+              </div>
+              <span>
+                {formatNumber(statistics.average_score_percentage)}%
+              </span>
+            </div>
 
-          <div className="analysis-item">
-            <span>Total Jawaban</span>
-            <strong>
-              {statistics.total_responses}
-            </strong>
+            <div className="analysis-item">
+              <div>
+                <strong>Total Assessment</strong>
+                <small>Jumlah assessment terkumpul</small>
+              </div>
+              <span>{statistics.total_assessments ?? 0}</span>
+            </div>
+
+            <div className="analysis-item">
+              <div>
+                <strong>Total Jawaban</strong>
+                <small>Jumlah seluruh jawaban</small>
+              </div>
+              <span>{statistics.total_responses ?? 0}</span>
+            </div>
           </div>
         </section>
       </div>
 
-      {/* Last Update */}
-      <div className="statistics-footer">
-        Terakhir diperbarui:{" "}
-        {formatDate(statistics.calculated_at)}
-      </div>
+      {/* FOOTER */}
+      <footer className="statistics-footer">
+        <div className="statistics-footer-status">
+          <span className="status-dot" />
+          Data statistik tersimpan
+        </div>
+
+        <span>
+          Terakhir diperbarui: {formatDate(statistics.calculated_at)}
+        </span>
+      </footer>
     </div>
   );
 }

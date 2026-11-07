@@ -12,107 +12,126 @@ function StudentDashboard({
   onOpenAI,
 }) {
   const firstName = user?.name?.split(" ")[0] || "Mahasiswa";
+  const fullName = user?.name || "Mahasiswa";
+
+  const navigation = [
+    { label: "Dashboard", icon: "⌂", action: null, active: true },
+    { label: "Business Profile", icon: "◇", action: onOpenProfile },
+    { label: "Business Assessment", icon: "▤", action: onOpenAssessment },
+    { label: "Assessment History", icon: "◷", action: onOpenHistory },
+    { label: "Assessment Statistics", icon: "▥", action: onOpenStatistics },
+    { label: "Consultation", icon: "◌", action: onOpenConsultation },
+    { label: "AI Assistant", icon: "✧", action: onOpenAI },
+  ];
+
+  const features = [
+    {
+      number: "01",
+      icon: "◇",
+      category: "BUSINESS SETUP",
+      title: "Business Profile",
+      description:
+        "Kenalkan bisnismu melalui informasi ide, kategori, produk, dan target pasar.",
+      actionLabel: "Kelola profil",
+      action: onOpenProfile,
+      className: "profile-feature",
+    },
+    {
+      number: "02",
+      icon: "▤",
+      category: "SELF ASSESSMENT",
+      title: "Business Assessment",
+      description:
+        "Evaluasi kesiapan bisnis dari aspek produk, pasar, pemasaran, keuangan, dan operasional.",
+      actionLabel: "Mulai assessment",
+      action: onOpenAssessment,
+      className: "assessment-feature",
+    },
+    {
+      number: "03",
+      icon: "◷",
+      category: "YOUR DEVELOPMENT",
+      title: "Assessment History",
+      description:
+        "Tinjau hasil assessment sebelumnya dan pantau perkembangan kesiapan bisnismu.",
+      actionLabel: "Lihat riwayat",
+      action: onOpenHistory,
+      className: "history-feature",
+    },
+    {
+      number: "04",
+      icon: "▥",
+      category: "BUSINESS INSIGHTS",
+      title: "Assessment Statistics",
+      description:
+        "Pelajari ringkasan skor, distribusi jawaban, dan statistik hasil assessment.",
+      actionLabel: "Lihat statistik",
+      action: onOpenStatistics,
+      className: "statistics-feature",
+    },
+    {
+      number: "05",
+      icon: "◌",
+      category: "PERSONAL GUIDANCE",
+      title: "Business Consultation",
+      description:
+        "Dapatkan arahan untuk mengembangkan ide, menentukan pasar, dan strategi bisnis.",
+      actionLabel: "Buka konsultasi",
+      action: onOpenConsultation,
+      className: "consultation-feature",
+    },
+    {
+      number: "06",
+      icon: "✧",
+      category: "AI POWERED",
+      title: "AI Business Assistant",
+      description:
+        "Diskusikan ide bisnis dan dapatkan rekomendasi pengembangan berdasarkan profil serta assessment-mu.",
+      actionLabel: "Mulai diskusi",
+      action: onOpenAI,
+      className: "ai-feature",
+    },
+  ];
 
   return (
     <div className="dashboard">
       {/* SIDEBAR */}
       <aside className="dashboard-sidebar">
-        <a href="#dashboard" className="dashboard-logo">
-          startiva<span>.</span>
-        </a>
-
-        <div className="sidebar-label">MENU UTAMA</div>
-
-        <nav className="sidebar-menu">
-          <a
-            href="#dashboard"
-            className="active"
-            onClick={(e) => e.preventDefault()}
-          >
-            <span>⌂</span>
-            Dashboard
+        <div className="sidebar-brand">
+          <a href="#dashboard" className="dashboard-logo">
+            startiva<span>.</span>
           </a>
+          <span className="brand-caption">BUSINESS COMPANION</span>
+        </div>
 
-          <a
-            href="#business-profile"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenProfile?.();
-            }}
-          >
-            <span>○</span>
-            Business Profile
-          </a>
+        <div className="sidebar-label">WORKSPACE</div>
 
-          <a
-            href="#assessment"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenAssessment?.();
-            }}
-          >
-            <span>◈</span>
-            Business Assessment
-          </a>
-
-          <a
-            href="#assessment-history"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenHistory?.();
-            }}
-          >
-            <span>▤</span>
-            Assessment History
-          </a>
-
-          <a
-            href="#assessment-statistics"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenStatistics?.();
-            }}
-          >
-            <span>▥</span>
-            Assessment Statistics
-          </a>
-
-          <a
-            href="#consultation"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenConsultation?.();
-            }}
-          >
-            <span>✳</span>
-            Consultation
-          </a>
-
-          {/* AI BUSINESS ASSISTANT */}
-          <a
-            href="#ai-assistant"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenAI?.();
-            }}
-          >
-            <span>✧</span>
-            AI Business Assistant
-          </a>
-
-          <a
-            href="#profile"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenProfile?.();
-            }}
-          >
-            <span>○</span>
-            My Profile
-          </a>
+        <nav className="sidebar-menu" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              className={`sidebar-link ${item.active ? "active" : ""}`}
+              onClick={item.action || undefined}
+              aria-current={item.active ? "page" : undefined}
+            >
+              <span className="sidebar-link-icon">{item.icon}</span>
+              <span>{item.label}</span>
+              {item.active && <span className="active-indicator" />}
+            </button>
+          ))}
         </nav>
 
-        {/* SIDEBAR USER */}
+        <div className="sidebar-help">
+          <div className="sidebar-help-icon">✦</div>
+          <strong>Keep growing!</strong>
+          <p>Small steps can lead to meaningful progress.</p>
+          <button type="button" onClick={onOpenAI}>
+            Talk with AI <span>↗</span>
+          </button>
+        </div>
+
+        {/* USER ACCOUNT */}
         <div className="sidebar-bottom">
           <div className="sidebar-user">
             <div className="user-avatar">
@@ -120,8 +139,8 @@ function StudentDashboard({
             </div>
 
             <div className="user-info">
-              <strong>{user?.name || "Mahasiswa"}</strong>
-              <small>Student Account</small>
+              <strong title={fullName}>{fullName}</strong>
+              <small>Student account</small>
             </div>
           </div>
 
@@ -130,288 +149,228 @@ function StudentDashboard({
             className="sidebar-logout"
             onClick={onLogout}
           >
-            ↪ Keluar
+            <span>↪</span>
+            Sign out
           </button>
         </div>
       </aside>
 
-      {/* MAIN DASHBOARD */}
+      {/* MAIN CONTENT */}
       <main className="dashboard-main" id="dashboard">
-
-        {/* HEADER */}
+        {/* TOP HEADER */}
         <header className="dashboard-header">
-          <div>
-            <span className="dashboard-date">
-              STUDENT WORKSPACE
+          <div className="header-heading">
+            <span className="dashboard-breadcrumb">
+              WORKSPACE <span>/</span> OVERVIEW
             </span>
-
             <h1>Dashboard</h1>
+            <p>Manage your business journey in one place.</p>
           </div>
 
           <div className="header-profile">
-            <div className="user-avatar">
+            <div className="header-user-info">
+              <strong>{fullName}</strong>
+              <small>Student workspace</small>
+            </div>
+            <div className="user-avatar header-avatar">
               {firstName.charAt(0).toUpperCase()}
             </div>
-
-            <span>{user?.name || "Mahasiswa"}</span>
           </div>
         </header>
 
-        {/* WELCOME */}
+        {/* WELCOME HERO */}
         <section className="welcome-banner">
           <div className="welcome-content">
             <span className="welcome-label">
-              WELCOME TO YOUR JOURNEY
+              YOUR BUSINESS JOURNEY STARTS HERE
             </span>
 
             <h2>
-              Hello, {firstName}!
+              Hello, {firstName}.
               <br />
-              Ready to grow your idea?
+              Let's build something meaningful.
             </h2>
 
             <p>
-              Setiap bisnis dimulai dari satu langkah kecil.
-              Kenali potensimu dan mulai kembangkan ide bisnismu
-              bersama Startiva.
+              Punya ide bisnis? Saatnya mengenali potensinya,
+              mengevaluasi kesiapan, dan menemukan langkah
+              pengembangan yang tepat bersama Startiva.
             </p>
 
-            <button
-              type="button"
-              className="profile-action-button"
-              onClick={onOpenProfile}
-            >
-              Lengkapi Profil Bisnis →
-            </button>
-          </div>
+            <div className="welcome-actions">
+              <button
+                type="button"
+                className="welcome-primary-button"
+                onClick={onOpenAssessment}
+              >
+                Explore assessment <span>↗</span>
+              </button>
 
-          <div className="welcome-decoration">
-            <span>✦</span>
-            <strong>01</strong>
-            <small>YOUR JOURNEY</small>
-          </div>
-        </section>
-
-        {/* BUSINESS JOURNEY */}
-        <section className="dashboard-section">
-          <div className="dashboard-section-heading">
-            <div>
-              <span className="dashboard-eyebrow">
-                YOUR PROGRESS
-              </span>
-
-              <h2>Business Journey</h2>
+              <button
+                type="button"
+                className="welcome-secondary-button"
+                onClick={onOpenProfile}
+              >
+                Set up business profile
+              </button>
             </div>
           </div>
 
-          <div className="progress-card">
-            <div className="progress-icon">◈</div>
+          <div className="hero-art" aria-hidden="true">
+            <div className="hero-orbit orbit-one" />
+            <div className="hero-orbit orbit-two" />
+            <div className="hero-orbit orbit-three" />
 
-            <div className="progress-content">
-              <h3>Your business journey starts here</h3>
+            <div className="hero-center">
+              <span>✦</span>
+              <strong>grow</strong>
+              <small>YOUR IDEA</small>
+            </div>
 
+            <span className="hero-spark spark-one">✧</span>
+            <span className="hero-spark spark-two">✦</span>
+            <span className="hero-spark spark-three">✧</span>
+            <span className="hero-dot dot-one" />
+            <span className="hero-dot dot-two" />
+          </div>
+
+          <div className="hero-index">STARTIVA / 001</div>
+        </section>
+
+        {/* JOURNEY SECTION */}
+        <section className="dashboard-section journey-section">
+          <div className="section-heading">
+            <div>
+              <span className="section-eyebrow">GETTING STARTED</span>
+              <h2>Your business journey</h2>
               <p>
-                Lengkapi profil dan ikuti asesmen untuk mengetahui
-                kesiapan serta potensi bisnis yang ingin kamu kembangkan.
+                Three simple steps to understand and develop your business.
               </p>
-
-              <div className="progress-track">
-                <div className="progress-fill"></div>
-              </div>
-
-              <small>
-                Belum ada asesmen yang diselesaikan
-              </small>
             </div>
+          </div>
 
-            <span className="progress-status">
-              Not started
-            </span>
+          <div className="journey-grid">
+            <article className="journey-step">
+              <div className="journey-step-top">
+                <span className="journey-step-icon">01</span>
+                <span className="journey-step-symbol">◇</span>
+              </div>
+              <h3>Build your profile</h3>
+              <p>
+                Ceritakan ide, produk, dan target pasar yang ingin kamu
+                kembangkan.
+              </p>
+              <button type="button" onClick={onOpenProfile}>
+                Complete profile <span>→</span>
+              </button>
+            </article>
+
+            <article className="journey-step">
+              <div className="journey-step-top">
+                <span className="journey-step-icon">02</span>
+                <span className="journey-step-symbol">▤</span>
+              </div>
+              <h3>Assess your readiness</h3>
+              <p>
+                Kenali kesiapan bisnismu melalui lima aspek penilaian.
+              </p>
+              <button type="button" onClick={onOpenAssessment}>
+                Take assessment <span>→</span>
+              </button>
+            </article>
+
+            <article className="journey-step">
+              <div className="journey-step-top">
+                <span className="journey-step-icon">03</span>
+                <span className="journey-step-symbol">✧</span>
+              </div>
+              <h3>Grow your business</h3>
+              <p>
+                Gunakan hasil penilaian dan konsultasi untuk menentukan
+                langkah berikutnya.
+              </p>
+              <button type="button" onClick={onOpenAI}>
+                Explore recommendations <span>→</span>
+              </button>
+            </article>
           </div>
         </section>
 
-        {/* EXPLORE STARTIVA */}
-        <section className="dashboard-section">
-          <div className="dashboard-section-heading">
+        {/* FEATURE SECTION */}
+        <section className="dashboard-section explore-section">
+          <div className="section-heading feature-heading">
             <div>
-              <span className="dashboard-eyebrow">
-                EXPLORE STARTIVA
-              </span>
-
-              <h2>What would you like to do?</h2>
+              <span className="section-eyebrow">EXPLORE YOUR WORKSPACE</span>
+              <h2>Everything you need to grow</h2>
+              <p>
+                Pilih layanan yang sesuai dengan kebutuhan pengembangan
+                bisnismu.
+              </p>
             </div>
           </div>
 
           <div className="dashboard-feature-grid">
-
-            {/* BUSINESS PROFILE */}
-            <article className="dashboard-feature-card assessment-card">
-              <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">○</span>
-                <span className="dashboard-card-number">01</span>
-              </div>
-
-              <h3>Business Profile</h3>
-
-              <p>
-                Lengkapi informasi bisnis, mulai dari ide,
-                kategori, produk atau layanan, hingga target pasar.
-              </p>
-
-              <button
-                type="button"
-                className="dashboard-feature-button"
-                onClick={onOpenProfile}
+            {features.map((feature) => (
+              <article
+                className={`dashboard-feature-card ${feature.className}`}
+                key={feature.number}
               >
-                Lengkapi Profil →
-              </button>
-            </article>
+                <div className="feature-card-top">
+                  <div className="feature-icon">
+                    {feature.icon}
+                  </div>
+                  <span className="feature-number">
+                    {feature.number}
+                  </span>
+                </div>
 
-            {/* BUSINESS ASSESSMENT */}
-            <article className="dashboard-feature-card consultation-card">
-              <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">◈</span>
-                <span className="dashboard-card-number">02</span>
-              </div>
+                <span className="feature-category">
+                  {feature.category}
+                </span>
 
-              <h3>Business Assessment</h3>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
 
-              <p>
-                Kenali kesiapan bisnismu melalui asesmen yang
-                mencakup produk, pasar, pemasaran, keuangan,
-                dan operasional bisnis.
-              </p>
-
-              <button
-                type="button"
-                className="dashboard-feature-button"
-                onClick={onOpenAssessment}
-              >
-                Mulai Assessment →
-              </button>
-            </article>
-
-            {/* ASSESSMENT HISTORY */}
-            <article className="dashboard-feature-card assessment-card">
-              <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">▤</span>
-                <span className="dashboard-card-number">03</span>
-              </div>
-
-              <h3>Assessment History</h3>
-
-              <p>
-                Lihat kembali hasil assessment sebelumnya,
-                skor kesiapan, dan perkembangan bisnismu.
-              </p>
-
-              <button
-                type="button"
-                className="dashboard-feature-button"
-                onClick={onOpenHistory}
-              >
-                Lihat Riwayat →
-              </button>
-            </article>
-
-            {/* ASSESSMENT STATISTICS */}
-            <article className="dashboard-feature-card consultation-card">
-              <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">▥</span>
-                <span className="dashboard-card-number">04</span>
-              </div>
-
-              <h3>Assessment Statistics</h3>
-
-              <p>
-                Lihat ringkasan hasil asesmen, rata-rata skor,
-                distribusi jawaban, dan analisis kesiapan bisnis.
-              </p>
-
-              <button
-                type="button"
-                className="dashboard-feature-button"
-                onClick={onOpenStatistics}
-              >
-                Lihat Statistik →
-              </button>
-            </article>
-
-            {/* BUSINESS CONSULTATION */}
-            <article className="dashboard-feature-card assessment-card">
-              <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">✳</span>
-                <span className="dashboard-card-number">05</span>
-              </div>
-
-              <h3>Business Consultation</h3>
-
-              <p>
-                Temukan arahan untuk mengembangkan ide,
-                menentukan target pasar, strategi pemasaran,
-                hingga pengelolaan bisnis.
-              </p>
-
-              <button
-                type="button"
-                className="dashboard-feature-button"
-                onClick={onOpenConsultation}
-              >
-                Ajukan Konsultasi →
-              </button>
-            </article>
-
-            {/* AI BUSINESS ASSISTANT */}
-            <article className="dashboard-feature-card ai-assistant-card">
-              <div className="dashboard-card-top">
-                <span className="dashboard-card-icon">✧</span>
-                <span className="dashboard-card-number">06</span>
-              </div>
-
-              <h3>AI Business Assistant</h3>
-
-              <p>
-                Diskusikan ide bisnis, temukan inspirasi produk,
-                dan dapatkan rekomendasi pengembangan bisnis
-                bersama asisten AI Startiva.
-              </p>
-
-              <button
-                type="button"
-                className="dashboard-feature-button"
-                onClick={onOpenAI}
-              >
-                Mulai Diskusi AI →
-              </button>
-            </article>
-
+                <button
+                  type="button"
+                  className="dashboard-feature-button"
+                  onClick={feature.action}
+                >
+                  {feature.actionLabel}
+                  <span>↗</span>
+                </button>
+              </article>
+            ))}
           </div>
         </section>
 
-        {/* REMINDER */}
+        {/* BOTTOM MESSAGE */}
         <section className="dashboard-bottom-card">
-          <div>
-            <span className="dashboard-eyebrow">
-              A LITTLE REMINDER
-            </span>
+          <div className="bottom-message-icon">✦</div>
 
+          <div className="bottom-message-content">
+            <span className="section-eyebrow">A NOTE FOR YOU</span>
             <h2>Start small. Grow with confidence.</h2>
-
             <p>
-              Kamu tidak harus memiliki bisnis yang sempurna
-              untuk memulai. Mulailah dengan mengenali potensimu.
+              Kamu tidak harus memiliki bisnis yang sempurna untuk memulai.
+              Setiap langkah kecil adalah bagian dari proses bertumbuh.
             </p>
           </div>
 
-          <span className="bottom-decoration">✧</span>
+          <div className="bottom-decoration" aria-hidden="true">
+            <span>✧</span>
+            <span>✦</span>
+            <span>✧</span>
+          </div>
         </section>
 
         {/* FOOTER */}
         <footer className="dashboard-footer">
-          <span>startiva.</span>
-          <small>Assess. Consult. Grow. © 2026</small>
+          <a href="#dashboard" className="footer-logo">
+            startiva<span>.</span>
+          </a>
+          <small>Assess. Consult. Grow. © 2026 Startiva.</small>
         </footer>
-
       </main>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 const API_URL =
@@ -52,11 +53,16 @@ const assessmentSections = [
 ];
 
 const answerOptions = [
-  { value: 1, label: "Sangat Tidak Setuju" },
-  { value: 2, label: "Tidak Setuju" },
-  { value: 3, label: "Setuju" },
-  { value: 4, label: "Sangat Setuju" },
+  { value: 1, label: "Sangat Tidak Setuju", short: "STS" },
+  { value: 2, label: "Tidak Setuju", short: "TS" },
+  { value: 3, label: "Setuju", short: "S" },
+  { value: 4, label: "Sangat Setuju", short: "SS" },
 ];
+
+const totalQuestions = assessmentSections.reduce(
+  (total, section) => total + section.questions.length,
+  0
+);
 
 function BusinessAssessment() {
   const [answers, setAnswers] = useState({});
@@ -64,25 +70,29 @@ function BusinessAssessment() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const totalQuestions = assessmentSections.reduce(
-    (total, section) => total + section.questions.length,
-    0
-  );
-
   const answeredCount = Object.keys(answers).length;
 
   const progress = Math.round(
     (answeredCount / totalQuestions) * 100
   );
 
+  const completedSections = assessmentSections.filter(
+    (_, sectionIndex) =>
+      assessmentSections[sectionIndex].questions.every(
+        (_, questionIndex) =>
+          answers[`${sectionIndex}-${questionIndex}`] !== undefined
+      )
+  ).length;
+
   const handleAnswer = (questionKey, value) => {
     setAnswers((prev) => ({
       ...prev,
       [questionKey]: value,
     }));
+
+    if (error) setError("");
   };
 
-  // Menghitung hasil assessment
   const calculateResult = () => {
     let totalScore = 0;
     const aspectResults = [];
@@ -147,7 +157,6 @@ function BusinessAssessment() {
     };
   };
 
-  // Membuat rekomendasi berdasarkan aspek
   const getRecommendations = (assessmentResult) => {
     if (!assessmentResult) return [];
 
@@ -195,7 +204,6 @@ function BusinessAssessment() {
     return recommendations;
   };
 
-  // Mengirim hasil assessment ke Laravel
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -216,13 +224,12 @@ function BusinessAssessment() {
 
     try {
       const calculatedResult = calculateResult();
-
       const recommendations = getRecommendations(calculatedResult);
 
       const payload = {
-        answers: answers,
+        answers,
         aspect_scores: calculatedResult.aspects,
-        recommendations: recommendations,
+        recommendations,
       };
 
       const response = await fetch(
@@ -258,7 +265,6 @@ function BusinessAssessment() {
         );
       }
 
-      // Menampilkan hasil dan status integrasi n8n
       setResult({
         ...calculatedResult,
         recommendations,
@@ -266,6 +272,8 @@ function BusinessAssessment() {
         createdAt: data.data.created_at,
         n8nStatus: data.n8n_status || "not_configured",
       });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error("Assessment error:", err);
 
@@ -288,7 +296,6 @@ function BusinessAssessment() {
     });
   };
 
-  // Tampilan status integrasi n8n
   const getN8nStatus = () => {
     switch (result?.n8nStatus) {
       case "sent":
@@ -297,6 +304,7 @@ function BusinessAssessment() {
           description:
             "Hasil assessment berhasil diteruskan ke sistem pengolahan n8n.",
           className: "n8n-success",
+          symbol: "✓",
         };
 
       case "failed":
@@ -305,6 +313,7 @@ function BusinessAssessment() {
           description:
             "Hasil assessment tetap berhasil disimpan di database Laravel, tetapi belum berhasil diteruskan ke n8n.",
           className: "n8n-failed",
+          symbol: "!",
         };
 
       case "not_configured":
@@ -314,6 +323,7 @@ function BusinessAssessment() {
           description:
             "Hasil assessment berhasil disimpan, tetapi URL Webhook n8n belum dikonfigurasi atau belum terbaca oleh Laravel.",
           className: "n8n-pending",
+          symbol: "i",
         };
     }
   };
@@ -322,268 +332,749 @@ function BusinessAssessment() {
     <div className="assessment-page">
       <style>{`
         .assessment-page {
-          max-width: 950px;
+          --as-primary: #A94442;
+          --as-primary-dark: #853936;
+          --as-light: #FBECE9;
+          --as-blush: #F7E4DF;
+          --as-text: #382A29;
+          --as-muted: #8D7D7B;
+          --as-border: #F0E7E4;
+          --as-bg: #FAF7F5;
+
+          width: 100%;
+          max-width: 1050px;
           margin: 0 auto;
-          padding: 32px 20px;
-          color: #292d36;
+          padding: 32px 24px 55px;
+          color: var(--as-text);
+          font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .assessment-page * {
+          box-sizing: border-box;
+        }
+
+        .assessment-page button {
+          font-family: inherit;
+        }
+
+        /* HEADER */
+
+        .assessment-topline {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--as-muted);
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 1.4px;
+          margin-bottom: 12px;
+        }
+
+        .assessment-topline span {
+          color: var(--as-primary);
         }
 
         .assessment-header {
-          margin-bottom: 28px;
-        }
-
-        .assessment-header h1 {
-          font-size: 27px;
-          margin-bottom: 10px;
-        }
-
-        .assessment-header p {
-          color: #777;
-          line-height: 1.7;
-        }
-
-        .assessment-progress {
-          background: white;
-          border: 1px solid #eee;
-          border-radius: 14px;
-          padding: 20px;
           margin-bottom: 25px;
         }
 
+        .assessment-header h1 {
+          margin: 0 0 9px;
+          font-size: clamp(23px, 3vw, 30px);
+          font-weight: 800;
+          letter-spacing: -1.1px;
+        }
+
+        .assessment-header p {
+          max-width: 650px;
+          margin: 0;
+          color: var(--as-muted);
+          font-size: 12px;
+          line-height: 1.8;
+        }
+
+        .assessment-note {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 15px 17px;
+          margin-top: 20px;
+          border: 1px solid #F0DCD7;
+          border-radius: 11px;
+          background: #FFF8F5;
+        }
+
+        .assessment-note-icon {
+          width: 29px;
+          height: 29px;
+          flex-shrink: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 9px;
+          background: var(--as-light);
+          color: var(--as-primary);
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .assessment-note strong {
+          display: block;
+          font-size: 10px;
+          margin-bottom: 4px;
+        }
+
+        .assessment-note p {
+          margin: 0;
+          color: var(--as-muted);
+          font-size: 9px;
+          line-height: 1.7;
+        }
+
+        /* PROGRESS */
+
+        .assessment-progress {
+          position: sticky;
+          top: 10px;
+          z-index: 5;
+          padding: 18px 20px;
+          margin-bottom: 23px;
+          border: 1px solid var(--as-border);
+          border-radius: 13px;
+          background: rgba(255,255,255,.96);
+          box-shadow: 0 5px 20px rgba(56,42,41,.04);
+          backdrop-filter: blur(10px);
+        }
+
+        .progress-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .progress-top strong {
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .progress-percentage {
+          color: var(--as-primary);
+          font-size: 16px;
+          font-weight: 800;
+        }
+
         .progress-track {
-          height: 9px;
-          background: #eeeaf8;
-          border-radius: 20px;
+          width: 100%;
+          height: 7px;
           overflow: hidden;
-          margin-top: 12px;
+          margin: 11px 0 9px;
+          border-radius: 20px;
+          background: #F2EAE7;
         }
 
         .progress-fill {
           height: 100%;
-          background: #8068c9;
+          border-radius: inherit;
+          background: linear-gradient(90deg, #A94442, #D17B70);
           transition: width .3s ease;
         }
 
+        .progress-bottom {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          color: var(--as-muted);
+          font-size: 9px;
+        }
+
+        /* SECTION */
+
         .assessment-section {
+          padding: 23px;
+          margin-bottom: 17px;
+          border: 1px solid var(--as-border);
+          border-radius: 14px;
           background: white;
-          border: 1px solid #eee;
-          border-radius: 15px;
-          padding: 24px;
-          margin-bottom: 20px;
+          box-shadow: 0 3px 15px rgba(56,42,41,.025);
         }
 
-        .assessment-section h3 {
-          margin: 0 0 8px;
-          font-size: 19px;
+        .assessment-section-heading {
+          display: flex;
+          align-items: flex-start;
+          gap: 13px;
+          margin-bottom: 21px;
         }
 
-        .assessment-section > p {
-          color: #888;
+        .section-number {
+          width: 37px;
+          height: 37px;
+          flex-shrink: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 11px;
+          background: var(--as-light);
+          color: var(--as-primary);
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .section-heading-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .section-heading-content h3 {
+          margin: 1px 0 5px;
           font-size: 14px;
-          margin-bottom: 24px;
+          font-weight: 800;
         }
+
+        .section-heading-content p {
+          margin: 0;
+          color: var(--as-muted);
+          font-size: 10px;
+          line-height: 1.7;
+        }
+
+        .section-complete {
+          padding: 5px 9px;
+          border-radius: 20px;
+          background: #EDF7F0;
+          color: #43805A;
+          font-size: 8px;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+
+        .section-incomplete {
+          padding: 5px 9px;
+          border-radius: 20px;
+          background: #F7F2EF;
+          color: #927D75;
+          font-size: 8px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+
+        /* QUESTIONS */
 
         .assessment-question {
           padding: 18px 0;
-          border-top: 1px solid #f0edf4;
+          border-top: 1px solid #F3ECE9;
         }
 
-        .assessment-question h4 {
-          font-size: 15px;
-          font-weight: 500;
-          line-height: 1.6;
-          margin: 0 0 15px;
+        .question-heading {
+          display: flex;
+          align-items: flex-start;
+          gap: 9px;
+          margin-bottom: 14px;
         }
+
+        .question-number {
+          width: 23px;
+          height: 23px;
+          flex-shrink: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 7px;
+          background: #F8F3F0;
+          color: var(--as-muted);
+          font-size: 9px;
+          font-weight: 800;
+        }
+
+        .question-heading h4 {
+          flex: 1;
+          margin: 2px 0 0;
+          font-size: 11px;
+          font-weight: 600;
+          line-height: 1.8;
+        }
+
+        .question-answered {
+          color: #43805A;
+          font-size: 9px;
+          font-weight: 800;
+        }
+
+        /* ANSWER OPTIONS */
 
         .answer-options {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 9px;
+          padding-left: 32px;
         }
 
         .answer-option {
-          border: 1px solid #e6e2ed;
+          min-width: 0;
+          min-height: 53px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding: 9px 7px;
+          border: 1px solid #EDE5E2;
           border-radius: 9px;
-          padding: 11px 7px;
-          text-align: center;
+          background: #FFFFFF;
+          color: #817573;
           cursor: pointer;
-          font-size: 12px;
-          color: #666;
-          transition: .2s;
+          text-align: center;
+          font-size: 9px;
+          font-weight: 600;
+          line-height: 1.5;
+          transition: .2s ease;
         }
 
-        .answer-option input {
-          display: block;
-          margin: 0 auto 8px;
-          accent-color: #8068c9;
+        .answer-option:hover {
+          border-color: #D9AAA3;
+          background: #FFF9F7;
         }
 
         .answer-option.selected {
-          border-color: #8068c9;
-          background: #f4f0ff;
-          color: #7157bd;
+          border: 1.5px solid var(--as-primary);
+          background: var(--as-light);
+          color: var(--as-primary-dark);
+          font-weight: 800;
+        }
+
+        .answer-option input {
+          width: 13px;
+          height: 13px;
+          flex-shrink: 0;
+          margin: 0;
+          accent-color: var(--as-primary);
+        }
+
+        /* SUBMIT */
+
+        .assessment-submit-area {
+          padding: 20px;
+          margin-top: 20px;
+          border: 1px solid var(--as-border);
+          border-radius: 13px;
+          background: white;
+        }
+
+        .submit-information {
+          margin-bottom: 14px;
+        }
+
+        .submit-information strong {
+          display: block;
+          margin-bottom: 5px;
+          font-size: 11px;
+        }
+
+        .submit-information p {
+          margin: 0;
+          color: var(--as-muted);
+          font-size: 9px;
+          line-height: 1.7;
         }
 
         .assessment-submit {
           width: 100%;
-          border: none;
-          border-radius: 10px;
-          background: #8068c9;
+          min-height: 47px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+          border: 0;
+          border-radius: 9px;
+          background: var(--as-primary);
           color: white;
-          padding: 15px;
-          font-size: 15px;
-          font-weight: 600;
+          font-size: 11px;
+          font-weight: 800;
           cursor: pointer;
-          margin-top: 10px;
+          transition: .2s ease;
         }
 
-        .assessment-submit:hover {
-          background: #7057b7;
+        .assessment-submit:hover:not(:disabled) {
+          background: var(--as-primary-dark);
+          transform: translateY(-1px);
+          box-shadow: 0 5px 15px #A9444225;
         }
 
         .assessment-submit:disabled {
-          opacity: .5;
+          background: #CDB8B3;
           cursor: not-allowed;
         }
 
         .error-message {
-          background: #fff0f0;
-          border: 1px solid #ffd4d4;
-          color: #c0392b;
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
           padding: 13px 15px;
-          border-radius: 9px;
           margin: 15px 0;
-          font-size: 14px;
-          line-height: 1.5;
+          border: 1px solid #F2CACA;
+          border-radius: 9px;
+          background: #FFF1F1;
+          color: #B63D3D;
+          font-size: 10px;
+          line-height: 1.7;
         }
+
+        /* RESULT */
 
         .result-card {
-          background: white;
-          border: 1px solid #eee;
+          padding: 27px;
+          border: 1px solid var(--as-border);
           border-radius: 16px;
-          padding: 28px;
+          background: white;
+          box-shadow: 0 5px 25px rgba(56,42,41,.04);
         }
 
-        .result-score {
-          text-align: center;
-          padding: 25px 10px;
-          background: #f7f4ff;
-          border-radius: 13px;
-          margin: 20px 0;
+        .result-header-label {
+          color: var(--as-primary);
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 1.6px;
         }
 
-        .result-score strong {
-          display: block;
-          font-size: 48px;
-          color: #8068c9;
+        .result-card > h1 {
+          margin: 9px 0 7px;
+          font-size: 24px;
+          font-weight: 800;
+          letter-spacing: -.8px;
         }
 
-        .result-score h2 {
-          color: #7157bd;
-          margin: 8px 0;
-        }
-
-        .result-score p {
-          line-height: 1.7;
-          color: #666;
-        }
-
-        .aspect-result {
-          margin: 20px 0;
-        }
-
-        .aspect-result p {
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-          font-size: 14px;
-        }
-
-        .recommendation-list {
-          padding-left: 20px;
+        .result-description {
+          margin: 0;
+          color: var(--as-muted);
+          font-size: 11px;
           line-height: 1.8;
-          color: #666;
         }
 
         .saved-info {
-          background: #f0faf3;
-          color: #287744;
-          border-radius: 9px;
           padding: 14px 16px;
-          margin: 15px 0;
-          font-size: 13px;
+          margin: 20px 0 12px;
+          border: 1px solid #D4EADD;
+          border-radius: 10px;
+          background: #F0F8F2;
+          color: #34744B;
+          font-size: 10px;
           line-height: 1.8;
         }
 
+        .saved-info strong {
+          display: block;
+          margin-bottom: 3px;
+          font-size: 11px;
+        }
+
         .n8n-status {
-          padding: 15px 16px;
-          border-radius: 9px;
-          margin: 15px 0 22px;
-          font-size: 13px;
-          line-height: 1.6;
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 14px 16px;
+          margin: 12px 0 22px;
+          border-radius: 10px;
+          font-size: 10px;
+          line-height: 1.7;
+        }
+
+        .n8n-status-symbol {
+          width: 25px;
+          height: 25px;
+          flex-shrink: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          background: #FFFFFF80;
+          font-weight: 800;
         }
 
         .n8n-status strong {
           display: block;
-          margin-bottom: 4px;
-          font-size: 14px;
+          margin-bottom: 3px;
+          font-size: 11px;
         }
 
         .n8n-success {
-          background: #effaf3;
-          border: 1px solid #ccebd5;
-          color: #287744;
+          background: #EFF8F1;
+          border: 1px solid #D1E8D7;
+          color: #34744B;
         }
 
         .n8n-failed {
-          background: #fff5ed;
-          border: 1px solid #f5d7bf;
-          color: #a85b27;
+          background: #FFF5ED;
+          border: 1px solid #F1D7C4;
+          color: #A85B27;
         }
 
         .n8n-pending {
-          background: #f5f2ff;
-          border: 1px solid #e3dcf8;
-          color: #7157bd;
+          background: #FFF8EF;
+          border: 1px solid #F0E0C8;
+          color: #91672E;
+        }
+
+        /* SCORE */
+
+        .result-score {
+          position: relative;
+          overflow: hidden;
+          padding: 29px 20px;
+          border: 1px solid #EFD7D1;
+          border-radius: 14px;
+          background:
+            radial-gradient(circle at 90% 10%, #EBC2B9 0, transparent 35%),
+            linear-gradient(120deg, #FBEBE7, #FFF8F5);
+          text-align: center;
+        }
+
+        .result-score-label {
+          color: var(--as-primary-dark);
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 1.4px;
+        }
+
+        .result-score strong {
+          display: block;
+          margin: 12px 0 4px;
+          color: var(--as-primary);
+          font-size: clamp(45px, 8vw, 58px);
+          font-weight: 800;
+          letter-spacing: -2px;
+        }
+
+        .result-score h2 {
+          margin: 4px 0 9px;
+          color: var(--as-primary-dark);
+          font-size: 19px;
+          font-weight: 800;
+        }
+
+        .result-score p {
+          max-width: 510px;
+          margin: 0 auto 13px;
+          color: #806B67;
+          font-size: 10px;
+          line-height: 1.8;
+        }
+
+        .result-score small {
+          color: #967B75;
+          font-size: 9px;
+          font-weight: 700;
+        }
+
+        /* RESULT ASPECTS */
+
+        .result-section {
+          margin-top: 29px;
+        }
+
+        .result-section h3 {
+          margin: 0 0 7px;
+          font-size: 14px;
+          font-weight: 800;
+        }
+
+        .result-section-description {
+          margin: 0 0 17px;
+          color: var(--as-muted);
+          font-size: 10px;
+          line-height: 1.7;
+        }
+
+        .aspect-result {
+          padding: 13px 0;
+          border-bottom: 1px solid #F3ECE9;
+        }
+
+        .aspect-result:last-child {
+          border-bottom: 0;
+        }
+
+        .aspect-result-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 9px;
+        }
+
+        .aspect-result-top strong {
+          font-size: 10px;
+        }
+
+        .aspect-result-top span {
+          color: var(--as-primary);
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .aspect-result .progress-track {
+          margin: 0;
+          height: 7px;
+        }
+
+        /* RECOMMENDATIONS */
+
+        .recommendation-list {
+          display: grid;
+          gap: 10px;
+          padding: 0;
+          margin: 15px 0 0;
+          list-style: none;
+        }
+
+        .recommendation-list li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 13px 14px;
+          border: 1px solid #F0E5E1;
+          border-radius: 9px;
+          background: #FFFAF8;
+          color: #705C58;
+          font-size: 10px;
+          line-height: 1.8;
+        }
+
+        .recommendation-bullet {
+          width: 21px;
+          height: 21px;
+          flex-shrink: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 7px;
+          background: var(--as-light);
+          color: var(--as-primary);
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        .recommendation-empty {
+          padding: 16px;
+          border-radius: 9px;
+          background: #F5F8F3;
+          color: #617B5D;
+          font-size: 10px;
+          line-height: 1.8;
+        }
+
+        .result-footer {
+          padding-top: 22px;
+          margin-top: 25px;
+          border-top: 1px solid var(--as-border);
         }
 
         .reset-button {
           width: 100%;
-          padding: 14px;
-          border: 1px solid #8068c9;
+          min-height: 45px;
+          padding: 12px;
+          border: 1px solid var(--as-primary);
+          border-radius: 9px;
           background: white;
-          color: #8068c9;
-          border-radius: 10px;
+          color: var(--as-primary);
+          font-size: 10px;
+          font-weight: 800;
           cursor: pointer;
-          margin-top: 20px;
-          font-weight: 600;
+          transition: .2s ease;
         }
 
         .reset-button:hover {
-          background: #f7f4ff;
+          background: var(--as-light);
         }
 
-        @media (max-width: 600px) {
-          .answer-options {
-            grid-template-columns: repeat(2, 1fr);
+        .assessment-page button:focus-visible,
+        .assessment-page input:focus-visible {
+          outline: 3px solid #E5B3AA;
+          outline-offset: 3px;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 760px) {
+          .assessment-page {
+            padding: 25px 17px 40px;
           }
 
           .assessment-section {
-            padding: 17px;
+            padding: 18px;
+          }
+
+          .answer-options {
+            padding-left: 0;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .answer-option {
+            min-height: 45px;
+            font-size: 9px;
+          }
+
+          .assessment-progress {
+            top: 5px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .assessment-page {
+            padding: 20px 13px 35px;
           }
 
           .assessment-header h1 {
-            font-size: 23px;
+            font-size: 22px;
+          }
+
+          .assessment-header p {
+            font-size: 10px;
+          }
+
+          .assessment-section {
+            padding: 15px;
+          }
+
+          .assessment-section-heading {
+            gap: 9px;
+          }
+
+          .section-heading-content h3 {
+            font-size: 12px;
+          }
+
+          .section-complete,
+          .section-incomplete {
+            font-size: 7px;
+            padding: 5px 7px;
+          }
+
+          .question-heading h4 {
+            font-size: 10px;
           }
 
           .result-card {
-            padding: 20px;
+            padding: 18px;
+          }
+
+          .result-card > h1 {
+            font-size: 21px;
+          }
+
+          .progress-bottom {
+            font-size: 8px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .assessment-page *,
+          .assessment-page *::before,
+          .assessment-page *::after {
+            transition-duration: .01ms !important;
           }
         }
       `}</style>
 
       {!result ? (
         <>
+          <div className="assessment-topline">
+            STARTIVA <span>/</span> BUSINESS ASSESSMENT
+          </div>
+
           <div className="assessment-header">
             <h1>Business Readiness Assessment</h1>
 
@@ -592,18 +1083,24 @@ function BusinessAssessment() {
               penilaian beberapa aspek penting sebelum memulai
               atau mengembangkan bisnis.
             </p>
+
+            <div className="assessment-note">
+              <div className="assessment-note-icon">i</div>
+              <div>
+                <strong>Sebelum memulai assessment</strong>
+                <p>
+                  Bacalah setiap pernyataan dengan cermat dan pilih
+                  jawaban yang paling sesuai dengan kondisi bisnis
+                  kamu saat ini. Seluruh pertanyaan wajib dijawab.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="assessment-progress">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 10,
-              }}
-            >
+            <div className="progress-top">
               <strong>Progress Assessment</strong>
-              <span>{progress}%</span>
+              <span className="progress-percentage">{progress}%</span>
             </div>
 
             <div className="progress-track">
@@ -613,96 +1110,161 @@ function BusinessAssessment() {
               />
             </div>
 
-            <small>
-              {answeredCount} dari {totalQuestions} pertanyaan dijawab
-            </small>
+            <div className="progress-bottom">
+              <span>
+                {answeredCount} dari {totalQuestions} pertanyaan dijawab
+              </span>
+              <span>
+                {completedSections} dari {assessmentSections.length} bagian selesai
+              </span>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {assessmentSections.map((section, sectionIndex) => (
-              <div className="assessment-section" key={section.title}>
-                <h3>
-                  {sectionIndex + 1}. {section.title}
-                </h3>
+            {assessmentSections.map((section, sectionIndex) => {
+              const sectionAnswered = section.questions.filter(
+                (_, questionIndex) =>
+                  answers[`${sectionIndex}-${questionIndex}`] !== undefined
+              ).length;
 
-                <p>{section.description}</p>
+              const sectionComplete =
+                sectionAnswered === section.questions.length;
 
-                {section.questions.map((question, questionIndex) => {
-                  const questionKey = `${sectionIndex}-${questionIndex}`;
-
-                  return (
-                    <div
-                      className="assessment-question"
-                      key={questionKey}
-                    >
-                      <h4>
-                        {questionIndex + 1}. {question}
-                      </h4>
-
-                      <div className="answer-options">
-                        {answerOptions.map((option) => (
-                          <label
-                            key={option.value}
-                            className={`answer-option ${
-                              answers[questionKey] === option.value
-                                ? "selected"
-                                : ""
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={questionKey}
-                              value={option.value}
-                              checked={
-                                answers[questionKey] === option.value
-                              }
-                              onChange={() =>
-                                handleAnswer(
-                                  questionKey,
-                                  option.value
-                                )
-                              }
-                            />
-
-                            {option.label}
-                          </label>
-                        ))}
-                      </div>
+              return (
+                <section
+                  className="assessment-section"
+                  key={section.title}
+                >
+                  <div className="assessment-section-heading">
+                    <div className="section-number">
+                      {String(sectionIndex + 1).padStart(2, "0")}
                     </div>
-                  );
-                })}
-              </div>
-            ))}
+
+                    <div className="section-heading-content">
+                      <h3>{section.title}</h3>
+                      <p>{section.description}</p>
+                    </div>
+
+                    <span
+                      className={
+                        sectionComplete
+                          ? "section-complete"
+                          : "section-incomplete"
+                      }
+                    >
+                      {sectionComplete ? "Selesai" : `${sectionAnswered}/${section.questions.length}`}
+                    </span>
+                  </div>
+
+                  {section.questions.map((question, questionIndex) => {
+                    const questionKey = `${sectionIndex}-${questionIndex}`;
+
+                    const selectedAnswer = answers[questionKey];
+
+                    return (
+                      <div
+                        className="assessment-question"
+                        key={questionKey}
+                      >
+                        <div className="question-heading">
+                          <span className="question-number">
+                            {questionIndex + 1}
+                          </span>
+
+                          <h4>{question}</h4>
+
+                          {selectedAnswer !== undefined && (
+                            <span className="question-answered">
+                              ✓
+                            </span>
+                          )}
+                        </div>
+
+                        <div
+                          className="answer-options"
+                          role="radiogroup"
+                          aria-label={question}
+                        >
+                          {answerOptions.map((option) => (
+                            <label
+                              key={option.value}
+                              className={`answer-option ${
+                                selectedAnswer === option.value
+                                  ? "selected"
+                                  : ""
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={questionKey}
+                                value={option.value}
+                                checked={selectedAnswer === option.value}
+                                onChange={() =>
+                                  handleAnswer(questionKey, option.value)
+                                }
+                              />
+
+                              {option.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </section>
+              );
+            })}
 
             {error && (
-              <div className="error-message">
-                {error}
+              <div className="error-message" role="alert">
+                <strong>!</strong>
+                <span>{error}</span>
               </div>
             )}
 
-            <button
-              type="submit"
-              className="assessment-submit"
-              disabled={answeredCount !== totalQuestions || loading}
-            >
-              {loading
-                ? "Menyimpan Hasil..."
-                : "Lihat Hasil Assessment"}
-            </button>
+            <div className="assessment-submit-area">
+              <div className="submit-information">
+                <strong>
+                  {answeredCount === totalQuestions
+                    ? "Semua pertanyaan sudah dijawab!"
+                    : "Selesaikan seluruh pertanyaan"}
+                </strong>
+
+                <p>
+                  {answeredCount === totalQuestions
+                    ? "Kirim jawaban kamu untuk melihat hasil dan rekomendasi kesiapan bisnis."
+                    : `Masih ada ${totalQuestions - answeredCount} pertanyaan yang belum dijawab.`}
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="assessment-submit"
+                disabled={answeredCount !== totalQuestions || loading}
+              >
+                {loading
+                  ? "Menyimpan Hasil Assessment..."
+                  : "Lihat Hasil Assessment"}
+                {!loading && <span>→</span>}
+              </button>
+            </div>
           </form>
         </>
       ) : (
         <div className="result-card">
+          <div className="result-header-label">
+            STARTIVA / ASSESSMENT RESULT
+          </div>
+
           <h1>Hasil Assessment Bisnis</h1>
 
-          <p>
+          <p className="result-description">
             Berikut hasil penilaian kesiapan bisnis berdasarkan
             jawaban yang telah kamu berikan.
           </p>
 
           <div className="saved-info">
-            <strong>Hasil assessment berhasil disimpan.</strong>
-            <br />
+            <strong>✓ Hasil assessment berhasil disimpan.</strong>
             Data telah tersimpan di database Laravel.
             <br />
             ID Assessment: #{result.assessmentId}
@@ -713,13 +1275,22 @@ function BusinessAssessment() {
 
             return (
               <div className={`n8n-status ${status.className}`}>
-                <strong>{status.title}</strong>
-                {status.description}
+                <div className="n8n-status-symbol">
+                  {status.symbol}
+                </div>
+                <div>
+                  <strong>{status.title}</strong>
+                  {status.description}
+                </div>
               </div>
             );
           })()}
 
           <div className="result-score">
+            <div className="result-score-label">
+              BUSINESS READINESS SCORE
+            </div>
+
             <strong>{result.percentage}%</strong>
 
             <h2>{result.category}</h2>
@@ -731,45 +1302,66 @@ function BusinessAssessment() {
             </small>
           </div>
 
-          <h3>Hasil Setiap Aspek</h3>
+          <div className="result-section">
+            <h3>Hasil Setiap Aspek</h3>
 
-          {result.aspects.map((aspect) => (
-            <div className="aspect-result" key={aspect.title}>
-              <p>
-                <strong>{aspect.title}</strong>
-                <span>{aspect.percentage}%</span>
-              </p>
-
-              <div className="progress-track">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${aspect.percentage}%` }}
-                />
-              </div>
-            </div>
-          ))}
-
-          <h3>Rekomendasi Pengembangan</h3>
-
-          {result.recommendations.length > 0 ? (
-            <ul className="recommendation-list">
-              {result.recommendations.map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>
-              Pertahankan kesiapan bisnis yang sudah baik dan
-              lanjutkan pengembangan strategi bisnis kamu.
+            <p className="result-section-description">
+              Berikut tingkat kesiapan bisnis berdasarkan lima aspek penilaian.
             </p>
-          )}
 
-          <button
-            className="reset-button"
-            onClick={handleReset}
-          >
-            Ulangi Assessment
-          </button>
+            {result.aspects.map((aspect) => (
+              <div className="aspect-result" key={aspect.title}>
+                <div className="aspect-result-top">
+                  <strong>{aspect.title}</strong>
+                  <span>{aspect.percentage}%</span>
+                </div>
+
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${aspect.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="result-section">
+            <h3>Rekomendasi Pengembangan</h3>
+
+            <p className="result-section-description">
+              Beberapa hal yang dapat kamu lakukan untuk meningkatkan kesiapan bisnis.
+            </p>
+
+            {result.recommendations.length > 0 ? (
+              <ul className="recommendation-list">
+                {result.recommendations.map((item, index) => (
+                  <li key={index}>
+                    <span className="recommendation-bullet">
+                      {index + 1}
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="recommendation-empty">
+                Seluruh aspek bisnis kamu sudah menunjukkan kesiapan
+                yang baik. Pertahankan kondisi ini dan lanjutkan
+                pengembangan strategi bisnis.
+              </div>
+            )}
+          </div>
+
+          <div className="result-footer">
+            <button
+              className="reset-button"
+              onClick={handleReset}
+              type="button"
+            >
+              Ulangi Assessment
+            </button>
+          </div>
         </div>
       )}
     </div>

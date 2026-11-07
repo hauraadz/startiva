@@ -8,7 +8,11 @@ const API_URL =
 function formatDate(date) {
   if (!date) return "-";
 
-  return new Date(date).toLocaleDateString("id-ID", {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return "-";
+
+  return parsedDate.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -26,6 +30,11 @@ function getLevelColor(level) {
     default:
       return "level-low";
   }
+}
+
+function formatScore(value) {
+  const score = Number(value);
+  return Number.isFinite(score) ? score.toFixed(1) : "0.0";
 }
 
 function AssessmentHistory() {
@@ -61,15 +70,15 @@ function AssessmentHistory() {
 
         const data = Array.isArray(result.data) ? result.data : [];
 
-        setAssessments(
-          data.sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-          )
+        data.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
         );
+
+        setAssessments(data);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || "Terjadi kesalahan saat mengambil data.");
       } finally {
         setLoading(false);
       }
@@ -77,6 +86,23 @@ function AssessmentHistory() {
 
     fetchHistory();
   }, []);
+
+  // Tutup modal menggunakan tombol Escape
+  useEffect(() => {
+    if (!selectedAssessment) return;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setSelectedAssessment(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [selectedAssessment]);
 
   const latestAssessment = assessments[0];
 
@@ -88,13 +114,20 @@ function AssessmentHistory() {
         ) / assessments.length
       : 0;
 
+  const openDetail = (assessment) => {
+    setSelectedAssessment(assessment);
+  };
+
+  const closeDetail = () => {
+    setSelectedAssessment(null);
+  };
+
   return (
     <div className="history-page">
       <div className="history-container">
-
         {/* PAGE HEADER */}
         <header className="history-header">
-          <div>
+          <div className="history-header-content">
             <span className="history-eyebrow">
               YOUR BUSINESS JOURNEY
             </span>
@@ -107,16 +140,17 @@ function AssessmentHistory() {
             </p>
           </div>
 
-          <div className="history-header-decoration">
+          <div className="history-header-decoration" aria-hidden="true">
             <span>STARTIVA</span>
             <strong>01</strong>
+            <div className="decoration-circle" />
           </div>
         </header>
 
         {/* LOADING */}
         {loading && (
           <div className="history-state">
-            <div className="history-loader"></div>
+            <div className="history-loader" />
             <p>Memuat riwayat assessment...</p>
           </div>
         )}
@@ -124,15 +158,19 @@ function AssessmentHistory() {
         {/* ERROR */}
         {!loading && error && (
           <div className="history-error">
-            <h3>Data belum dapat dimuat</h3>
-            <p>{error}</p>
+            <div className="history-error-icon">!</div>
 
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-            >
-              Coba Lagi
-            </button>
+            <div>
+              <h3>Data belum dapat dimuat</h3>
+              <p>{error}</p>
+
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+              >
+                Coba Lagi
+              </button>
+            </div>
           </div>
         )}
 
@@ -140,33 +178,25 @@ function AssessmentHistory() {
           <>
             {/* STATISTICS */}
             <section className="history-stats">
-
               <article className="history-stat-card">
                 <div className="history-stat-top">
                   <span>Total Assessment</span>
-                  <div className="history-stat-icon purple-icon">
-                    ◈
-                  </div>
+                  <div className="history-stat-icon red-icon">01</div>
                 </div>
 
                 <h2>{assessments.length}</h2>
-
                 <p>Assessment yang telah diselesaikan</p>
               </article>
 
               <article className="history-stat-card">
                 <div className="history-stat-top">
                   <span>Latest Score</span>
-                  <div className="history-stat-icon peach-icon">
-                    ↗
-                  </div>
+                  <div className="history-stat-icon peach-icon">↗</div>
                 </div>
 
                 <h2>
                   {latestAssessment
-                    ? `${Number(
-                        latestAssessment.score_percentage
-                      ).toFixed(1)}%`
+                    ? `${formatScore(latestAssessment.score_percentage)}%`
                     : "—"}
                 </h2>
 
@@ -176,9 +206,7 @@ function AssessmentHistory() {
               <article className="history-stat-card">
                 <div className="history-stat-top">
                   <span>Average Score</span>
-                  <div className="history-stat-icon green-icon">
-                    %
-                  </div>
+                  <div className="history-stat-icon rose-icon">%</div>
                 </div>
 
                 <h2>
@@ -189,7 +217,6 @@ function AssessmentHistory() {
 
                 <p>Rata-rata seluruh assessment</p>
               </article>
-
             </section>
 
             {/* LATEST ASSESSMENT */}
@@ -200,25 +227,35 @@ function AssessmentHistory() {
                     <span className="history-eyebrow">
                       MOST RECENT RESULT
                     </span>
-
                     <h2>Latest Assessment</h2>
                   </div>
                 </div>
 
                 <article className="latest-assessment-card">
                   <div className="latest-assessment-main">
-                    <div className="latest-result-label">
+                    <span className="latest-result-label">
                       YOUR READINESS SCORE
-                    </div>
+                    </span>
 
                     <div className="latest-score">
-                      {Number(
-                        latestAssessment.score_percentage
-                      ).toFixed(1)}
+                      {formatScore(latestAssessment.score_percentage)}
                       <span>%</span>
                     </div>
 
-                    <div className="latest-progress-track">
+                    <div
+                      className="latest-progress-track"
+                      role="progressbar"
+                      aria-label="Latest readiness score"
+                      aria-valuenow={Math.min(
+                        100,
+                        Math.max(
+                          0,
+                          Number(latestAssessment.score_percentage) || 0
+                        )
+                      )}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
                       <div
                         className="latest-progress-fill"
                         style={{
@@ -226,7 +263,7 @@ function AssessmentHistory() {
                             100,
                             Math.max(
                               0,
-                              Number(latestAssessment.score_percentage)
+                              Number(latestAssessment.score_percentage) || 0
                             )
                           )}%`,
                         }}
@@ -234,11 +271,11 @@ function AssessmentHistory() {
                     </div>
 
                     <p>
-                      Total score: {latestAssessment.total_score}
+                      Total score: {latestAssessment.total_score ?? "-"}
                     </p>
                   </div>
 
-                  <div className="latest-assessment-divider"></div>
+                  <div className="latest-assessment-divider" />
 
                   <div className="latest-assessment-info">
                     <span className="latest-result-label">
@@ -250,7 +287,7 @@ function AssessmentHistory() {
                         latestAssessment.readiness_level
                       )}`}
                     >
-                      {latestAssessment.readiness_level}
+                      {latestAssessment.readiness_level || "Belum tersedia"}
                     </span>
 
                     <div className="latest-date">
@@ -263,12 +300,9 @@ function AssessmentHistory() {
                     <button
                       type="button"
                       className="history-detail-button"
-                      onClick={() =>
-                        setSelectedAssessment(latestAssessment)
-                      }
+                      onClick={() => openDetail(latestAssessment)}
                     >
-                      View Result
-                      <span>→</span>
+                      View Result <span>→</span>
                     </button>
                   </div>
                 </article>
@@ -297,14 +331,14 @@ function AssessmentHistory() {
 
               {assessments.length === 0 ? (
                 <div className="history-empty">
-                  <div className="empty-icon">◈</div>
+                  <div className="empty-icon">01</div>
 
-                  <h3>No assessment yet</h3>
+                  <h3>Belum ada assessment</h3>
 
                   <p>
-                    Kamu belum memiliki riwayat assessment.
-                    Mulai assessment pertamamu untuk melihat
-                    tingkat kesiapan bisnis.
+                    Kamu belum memiliki riwayat assessment. Mulai
+                    assessment pertamamu untuk mengetahui tingkat
+                    kesiapan bisnis.
                   </p>
                 </div>
               ) : (
@@ -325,15 +359,10 @@ function AssessmentHistory() {
                         <tr key={item.id}>
                           <td>
                             <div className="history-name">
-                              <div className="history-row-icon">
-                                ◈
-                              </div>
+                              <div className="history-row-icon">A</div>
 
                               <div>
-                                <strong>
-                                  Business Assessment
-                                </strong>
-
+                                <strong>Business Assessment</strong>
                                 <small>
                                   Assessment #{assessments.length - index}
                                 </small>
@@ -349,9 +378,7 @@ function AssessmentHistory() {
 
                           <td>
                             <strong className="history-score">
-                              {Number(
-                                item.score_percentage
-                              ).toFixed(1)}%
+                              {formatScore(item.score_percentage)}%
                             </strong>
                           </td>
 
@@ -361,7 +388,7 @@ function AssessmentHistory() {
                                 item.readiness_level
                               )}`}
                             >
-                              {item.readiness_level}
+                              {item.readiness_level || "Belum tersedia"}
                             </span>
                           </td>
 
@@ -369,11 +396,9 @@ function AssessmentHistory() {
                             <button
                               type="button"
                               className="history-view-button"
-                              onClick={() =>
-                                setSelectedAssessment(item)
-                              }
+                              onClick={() => openDetail(item)}
                             >
-                              Details →
+                              Details <span>→</span>
                             </button>
                           </td>
                         </tr>
@@ -388,11 +413,15 @@ function AssessmentHistory() {
             {selectedAssessment && (
               <div
                 className="history-modal-overlay"
-                onClick={() => setSelectedAssessment(null)}
+                onClick={closeDetail}
+                role="presentation"
               >
                 <div
                   className="history-modal"
-                  onClick={(e) => e.stopPropagation()}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="history-modal-title"
+                  onClick={(event) => event.stopPropagation()}
                 >
                   <div className="history-modal-header">
                     <div>
@@ -400,13 +429,16 @@ function AssessmentHistory() {
                         ASSESSMENT RESULT
                       </span>
 
-                      <h2>Assessment Details</h2>
+                      <h2 id="history-modal-title">
+                        Assessment Details
+                      </h2>
                     </div>
 
                     <button
                       type="button"
                       className="history-modal-close"
-                      onClick={() => setSelectedAssessment(null)}
+                      onClick={closeDetail}
+                      aria-label="Tutup detail"
                     >
                       ×
                     </button>
@@ -416,10 +448,7 @@ function AssessmentHistory() {
                     <span>Readiness Score</span>
 
                     <h3>
-                      {Number(
-                        selectedAssessment.score_percentage
-                      ).toFixed(1)}
-                      %
+                      {formatScore(selectedAssessment.score_percentage)}%
                     </h3>
 
                     <span
@@ -427,7 +456,7 @@ function AssessmentHistory() {
                         selectedAssessment.readiness_level
                       )}`}
                     >
-                      {selectedAssessment.readiness_level}
+                      {selectedAssessment.readiness_level || "Belum tersedia"}
                     </span>
                   </div>
 
@@ -441,23 +470,19 @@ function AssessmentHistory() {
                   <div className="modal-detail-row">
                     <span>Total Score</span>
                     <strong>
-                      {selectedAssessment.total_score}
+                      {selectedAssessment.total_score ?? "-"}
                     </strong>
                   </div>
 
                   {selectedAssessment.aspect_scores &&
-                    Object.keys(selectedAssessment.aspect_scores).length >
-                      0 && (
+                    Object.keys(selectedAssessment.aspect_scores).length > 0 && (
                       <div className="modal-aspects">
                         <h3>Aspect Scores</h3>
 
                         {Object.entries(
                           selectedAssessment.aspect_scores
                         ).map(([aspect, score]) => (
-                          <div
-                            className="modal-aspect-item"
-                            key={aspect}
-                          >
+                          <div className="modal-aspect-item" key={aspect}>
                             <div>
                               <span>{aspect}</span>
                               <strong>

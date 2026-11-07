@@ -14,6 +14,13 @@ const initialForm = {
   target_market: "",
 };
 
+const stageOptions = [
+  { value: "exploring", label: "Masih mencari ide bisnis" },
+  { value: "idea_only", label: "Baru memiliki ide bisnis" },
+  { value: "starting", label: "Sedang memulai bisnis" },
+  { value: "operating", label: "Sudah menjalankan bisnis" },
+];
+
 function BusinessProfile() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
@@ -66,7 +73,6 @@ function BusinessProfile() {
         if (err.response?.status === 401) {
           setError("Sesi login telah berakhir. Silakan login kembali.");
         } else if (err.response?.status === 404) {
-          // Profil belum tersedia, gunakan form kosong.
           setForm(initialForm);
         } else {
           setError(
@@ -131,7 +137,6 @@ function BusinessProfile() {
         response.data?.message || "Profil bisnis berhasil disimpan!"
       );
 
-      // Perbarui form jika API mengembalikan data terbaru.
       if (response.data?.data) {
         const data = response.data.data;
 
@@ -154,9 +159,7 @@ function BusinessProfile() {
 
         if (validationErrors) {
           setError(
-            Object.values(validationErrors)
-              .flat()
-              .join(" ")
+            Object.values(validationErrors).flat().join(" ")
           );
         } else {
           setError(
@@ -177,7 +180,8 @@ function BusinessProfile() {
   if (loading) {
     return (
       <div className="business-profile-page">
-        <div className="business-profile-card">
+        <div className="profile-loading">
+          <div className="profile-loader"></div>
           <p>Memuat profil bisnis...</p>
         </div>
       </div>
@@ -186,136 +190,203 @@ function BusinessProfile() {
 
   return (
     <div className="business-profile-page">
-      <div className="business-profile-card">
-        <h2>Profil Bisnis</h2>
+      <div className="business-profile-container">
 
-        <p>
-          Ceritakan tentang bisnis atau ide yang ingin kamu kembangkan.
-          Informasi ini akan digunakan sebagai dasar penilaian kesiapan
-          bisnis.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="business_name">
-              Nama Bisnis
-            </label>
-
-            <input
-              id="business_name"
-              type="text"
-              name="business_name"
-              value={form.business_name}
-              onChange={handleChange}
-              placeholder="Contoh: Startiva Creative Studio"
-            />
+        <div className="profile-page-header">
+          <div>
+            <span className="profile-eyebrow">STARTIVA / BUSINESS PROFILE</span>
+            <h1>Profil Bisnis</h1>
+            <p>
+              Kenali dan ceritakan bisnis yang ingin kamu bangun.
+              Mulai dari ide sederhana hingga bisnis yang sudah berjalan.
+            </p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="business_stage">
-              Status Bisnis <span>*</span>
-            </label>
+          <div className="profile-header-icon">
+            <span>BP</span>
+          </div>
+        </div>
 
-            <select
-              id="business_stage"
-              name="business_stage"
-              value={form.business_stage}
-              onChange={handleChange}
-              required
+        <div className="profile-info-banner">
+          <div className="profile-info-icon">i</div>
+          <div>
+            <strong>Mengapa profil bisnis penting?</strong>
+            <p>
+              Informasi ini membantu Startiva memahami kondisi bisnismu
+              dan menjadi dasar dalam proses penilaian kesiapan bisnis
+              serta rekomendasi pengembangannya.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="business-profile-form">
+
+          <div className="profile-section">
+            <div className="profile-section-heading">
+              <div className="section-number">01</div>
+              <div>
+                <h3>Informasi Dasar</h3>
+                <p>Kenali identitas dan tahap perkembangan bisnismu.</p>
+              </div>
+            </div>
+
+            <div className="profile-form-grid">
+              <div className="form-group">
+                <label htmlFor="business_name">
+                  Nama Bisnis
+                  <span className="optional-label">Opsional</span>
+                </label>
+                <input
+                  id="business_name"
+                  type="text"
+                  name="business_name"
+                  value={form.business_name}
+                  onChange={handleChange}
+                  placeholder="Contoh: Startiva Creative Studio"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="business_category">
+                  Kategori Bisnis
+                  <span className="optional-label">Opsional</span>
+                </label>
+                <input
+                  id="business_category"
+                  type="text"
+                  name="business_category"
+                  value={form.business_category}
+                  onChange={handleChange}
+                  placeholder="Contoh: Kuliner, Fashion, Digital"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label htmlFor="business_stage">
+                  Status Bisnis <span className="required-label">*</span>
+                </label>
+                <select
+                  id="business_stage"
+                  name="business_stage"
+                  value={form.business_stage}
+                  onChange={handleChange}
+                  required
+                >
+                  {stageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <small>
+                  Pilih kondisi yang paling menggambarkan bisnismu saat ini.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-section">
+            <div className="profile-section-heading">
+              <div className="section-number">02</div>
+              <div>
+                <h3>Tentang Bisnismu</h3>
+                <p>Jelaskan ide serta produk atau layanan yang ditawarkan.</p>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="business_idea">
+                Ide Bisnis
+                <span className="optional-label">Opsional</span>
+              </label>
+              <textarea
+                id="business_idea"
+                name="business_idea"
+                value={form.business_idea}
+                onChange={handleChange}
+                placeholder="Ceritakan ide bisnis yang ingin kamu kembangkan..."
+                rows={4}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="product_description">
+                Deskripsi Produk atau Layanan
+                <span className="optional-label">Opsional</span>
+              </label>
+              <textarea
+                id="product_description"
+                name="product_description"
+                value={form.product_description}
+                onChange={handleChange}
+                placeholder="Jelaskan produk atau layanan yang ditawarkan, termasuk keunggulannya..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <div className="profile-section">
+            <div className="profile-section-heading">
+              <div className="section-number">03</div>
+              <div>
+                <h3>Target Pasar</h3>
+                <p>Tentukan siapa calon pelanggan yang ingin kamu jangkau.</p>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="target_market">
+                Target Pasar
+                <span className="optional-label">Opsional</span>
+              </label>
+              <textarea
+                id="target_market"
+                name="target_market"
+                value={form.target_market}
+                onChange={handleChange}
+                placeholder="Contoh: Mahasiswa, pekerja muda, atau masyarakat umum..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          {(message || error) && (
+            <div
+              className={`profile-feedback ${error ? "feedback-error" : "feedback-success"}`}
+              role={error ? "alert" : "status"}
             >
-              <option value="exploring">
-                Masih mencari ide bisnis
-              </option>
-
-              <option value="idea_only">
-                Baru memiliki ide bisnis
-              </option>
-
-              <option value="starting">
-                Sedang memulai bisnis
-              </option>
-
-              <option value="operating">
-                Sudah menjalankan bisnis
-              </option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="business_category">
-              Kategori Bisnis
-            </label>
-
-            <input
-              id="business_category"
-              type="text"
-              name="business_category"
-              value={form.business_category}
-              onChange={handleChange}
-              placeholder="Contoh: Kuliner, Fashion, Digital Services"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="business_idea">
-              Ide Bisnis
-            </label>
-
-            <textarea
-              id="business_idea"
-              name="business_idea"
-              value={form.business_idea}
-              onChange={handleChange}
-              placeholder="Ceritakan ide bisnis yang ingin kamu kembangkan..."
-              rows={4}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="product_description">
-              Deskripsi Produk atau Layanan
-            </label>
-
-            <textarea
-              id="product_description"
-              name="product_description"
-              value={form.product_description}
-              onChange={handleChange}
-              placeholder="Jelaskan produk atau layanan yang ditawarkan..."
-              rows={4}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="target_market">
-              Target Pasar
-            </label>
-
-            <textarea
-              id="target_market"
-              name="target_market"
-              value={form.target_market}
-              onChange={handleChange}
-              placeholder="Siapa target pengguna atau pelanggan bisnis kamu?"
-              rows={4}
-            />
-          </div>
-
-          {message && (
-            <p className="success-message" role="status">
-              {message}
-            </p>
+              <span className="feedback-icon">
+                {error ? "!" : "✓"}
+              </span>
+              <p>{error || message}</p>
+            </div>
           )}
 
-          {error && (
-            <p className="error-message" role="alert">
-              {error}
-            </p>
-          )}
+          <div className="profile-form-footer">
+            <div className="profile-footer-note">
+              <span>*</span>
+              Status bisnis wajib diisi.
+            </div>
 
-          <button type="submit" disabled={saving}>
-            {saving ? "Menyimpan..." : "Simpan Profil"}
-          </button>
+            <button
+              type="submit"
+              className="profile-save-button"
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <span className="button-spinner"></span>
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  Simpan Profil
+                  <span>→</span>
+                </>
+              )}
+            </button>
+          </div>
+
         </form>
       </div>
     </div>
