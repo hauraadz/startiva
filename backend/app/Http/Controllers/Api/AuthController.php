@@ -7,10 +7,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    // REGISTRASI
+    /**
+     * REGISTRASI MAHASISWA
+     */
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -35,7 +38,9 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // LOGIN
+    /**
+     * LOGIN MAHASISWA
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -58,26 +63,34 @@ class AuthController extends Controller
             'message' => 'Login berhasil!',
             'user' => $user,
             'token' => $token,
-        ]);
+        ], 200);
     }
 
-    // PROFIL MAHASISWA
+    /**
+     * PROFIL MAHASISWA
+     */
     public function profile(Request $request)
     {
         return response()->json([
             'success' => true,
             'user' => $request->user(),
-        ]);
+        ], 200);
     }
 
-    // LOGOUT
+    /**
+     * LOGOUT MAHASISWA
+     */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil!',
-        ]);
+        ], 200);
     }
 }
