@@ -9,6 +9,8 @@ class BusinessAssessment extends Model
 {
     use HasFactory;
 
+    protected $table = 'business_assessments';
+
     protected $fillable = [
         'user_id',
         'answers',
@@ -23,11 +25,15 @@ class BusinessAssessment extends Model
         'answers' => 'array',
         'aspect_scores' => 'array',
         'recommendations' => 'array',
+        'total_score' => 'float',
         'score_percentage' => 'float',
     ];
 
+    /**
+     * Relasi dengan pengguna yang mengisi assessment.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

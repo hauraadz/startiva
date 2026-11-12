@@ -1,5 +1,14 @@
 
 import { useEffect, useState } from "react";
+import {
+  HeartHandshake,
+  MessageCircle,
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 import "./Consultation.css";
 
 const API_URL =
@@ -14,7 +23,6 @@ function Consultation() {
   });
 
   const [consultations, setConsultations] = useState([]);
-  const [businessProfile, setBusinessProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -36,8 +44,14 @@ function Consultation() {
     const result = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      const validationMessage = result.errors
+        ? Object.values(result.errors).flat()[0]
+        : null;
+
       throw new Error(
-        result.message || "Terjadi kesalahan. Silakan coba lagi."
+        validationMessage ||
+          result.message ||
+          "Terjadi kesalahan. Silakan coba lagi."
       );
     }
 
@@ -49,17 +63,8 @@ function Consultation() {
     setError("");
 
     try {
-      const [consultationResult, profileResult] = await Promise.all([
-        request("/consultations"),
-        request("/business-profile").catch(() => null),
-      ]);
-
-      setConsultations(consultationResult.data || []);
-
-      const profile = profileResult?.data;
-      setBusinessProfile(
-        Array.isArray(profile) ? profile[0] || null : profile || null
-      );
+      const result = await request("/mahasiswa/consultations");
+      setConsultations(result.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,11 +101,13 @@ function Consultation() {
     setSubmitting(true);
 
     try {
-      await request("/consultations", {
+      await request("/mahasiswa/consultations", {
         method: "POST",
         body: JSON.stringify({
-          ...form,
-          business_profile_id: businessProfile?.id || null,
+          topic: form.topic.trim(),
+          description: form.description.trim(),
+          preferred_contact: form.preferred_contact,
+          contact_detail: form.contact_detail.trim(),
         }),
       });
 
@@ -123,17 +130,33 @@ function Consultation() {
 
   const getStatus = (status) => {
     const statuses = {
-      pending: { label: "Menunggu", className: "pending" },
-      approved: { label: "Disetujui", className: "approved" },
-      accepted: { label: "Disetujui", className: "approved" },
-      completed: { label: "Selesai", className: "completed" },
-      rejected: { label: "Ditolak", className: "rejected" },
+      pending: {
+        label: "Menunggu",
+        className: "pending",
+        description: "Pengajuan sedang menunggu konselor.",
+      },
+      accepted: {
+        label: "Diterima",
+        className: "accepted",
+        description: "Konselor telah menerima pengajuanmu.",
+      },
+      rejected: {
+        label: "Ditolak",
+        className: "rejected",
+        description: "Pengajuan konsultasi tidak dapat diterima.",
+      },
+      completed: {
+        label: "Selesai",
+        className: "completed",
+        description: "Sesi konsultasi telah selesai.",
+      },
     };
 
     return (
       statuses[status?.toLowerCase()] || {
         label: status || "Menunggu",
         className: "pending",
+        description: "",
       }
     );
   };
@@ -152,25 +175,26 @@ function Consultation() {
     <main className="consultation-page">
       <div className="consultation-container">
 
-        {/* Page Header */}
         <section className="consultation-heading">
           <div>
             <span className="consultation-eyebrow">
-              STARTIVA / CONSULTATION
+              STARTIVA / KONSELING
             </span>
-            <h1>Konsultasi Bisnis</h1>
+
+            <h1>Konsultasi Konselor Sebaya</h1>
+
             <p>
-              Punya pertanyaan atau kendala dalam mengembangkan bisnis?
-              Sampaikan kebutuhanmu dan dapatkan arahan dari tim konsultan Startiva.
+              Tidak harus menghadapi semuanya sendirian.
+              Ceritakan hal yang sedang kamu alami dan ajukan
+              sesi konsultasi bersama konselor sebaya.
             </p>
           </div>
 
           <div className="consultation-header-icon">
-            <span>CC</span>
+            <HeartHandshake size={31} strokeWidth={1.7} />
           </div>
         </section>
 
-        {/* Notifications */}
         {error && (
           <div className="consultation-alert error" role="alert">
             <span>!</span>
@@ -180,42 +204,33 @@ function Consultation() {
 
         {success && (
           <div className="consultation-alert success" role="status">
-            <span>✓</span>
+            <CheckCircle2 size={19} />
             {success}
           </div>
         )}
 
-        {/* Main Layout */}
         <div className="consultation-layout">
 
-          {/* Consultation Form */}
+          {/* FORM PENGAJUAN */}
           <section className="consultation-form-card">
             <div className="consultation-card-heading">
               <div>
                 <span className="consultation-step">
                   FORM PENGAJUAN
                 </span>
+
                 <h2>Ajukan Konsultasi</h2>
+
                 <p>
-                  Ceritakan kebutuhanmu agar kami dapat memahami
-                  hal yang ingin kamu diskusikan.
+                  Ceritakan topik yang ingin kamu diskusikan
+                  bersama konselor sebaya.
                 </p>
               </div>
 
-              <div className="consultation-heading-icon">+</div>
-            </div>
-
-            {businessProfile && (
-              <div className="consultation-business-info">
-                <div className="business-info-icon">B</div>
-                <div>
-                  <span>Profil bisnis terhubung</span>
-                  <strong>
-                    {businessProfile.business_name || "Bisnis Saya"}
-                  </strong>
-                </div>
+              <div className="consultation-heading-icon">
+                <MessageCircle size={21} />
               </div>
-            )}
+            </div>
 
             <form onSubmit={handleSubmit}>
               <div className="consultation-field">
@@ -227,34 +242,35 @@ function Consultation() {
                   id="topic"
                   name="topic"
                   type="text"
-                  placeholder="Contoh: Strategi pemasaran bisnis"
+                  placeholder="Contoh: Kesulitan mengelola stres akademik"
                   value={form.topic}
                   onChange={handleChange}
                   maxLength={255}
                   required
                 />
+
                 <small>
-                  Tuliskan topik utama yang ingin kamu konsultasikan.
+                  Tuliskan topik utama yang ingin kamu bicarakan.
                 </small>
               </div>
 
               <div className="consultation-field">
                 <label htmlFor="description">
-                  Deskripsi Kebutuhan <span>*</span>
+                  Ceritakan Kondisimu <span>*</span>
                 </label>
 
                 <textarea
                   id="description"
                   name="description"
-                  placeholder="Ceritakan kendala, pertanyaan, atau hal yang ingin kamu diskusikan..."
+                  placeholder="Ceritakan situasi atau hal yang sedang kamu hadapi. Tidak perlu terburu-buru, tuliskan senyamanmu..."
                   value={form.description}
                   onChange={handleChange}
-                  rows={5}
+                  rows={6}
                   required
                 />
 
                 <small>
-                  Jelaskan kebutuhanmu secara singkat dan jelas.
+                  Informasi ini membantu konselor memahami kebutuhanmu.
                 </small>
               </div>
 
@@ -262,7 +278,8 @@ function Consultation() {
                 <div className="contact-section-heading">
                   <h3>Informasi Kontak</h3>
                   <p>
-                    Pilih metode komunikasi yang dapat digunakan konsultan.
+                    Pilih metode komunikasi yang dapat digunakan
+                    konselor untuk menghubungimu.
                   </p>
                 </div>
 
@@ -308,9 +325,10 @@ function Consultation() {
 
               <div className="consultation-form-footer">
                 <div className="consultation-footer-note">
-                  <span>i</span>
+                  <ShieldCheck size={19} />
                   <p>
-                    Pastikan informasi kontak yang diberikan masih aktif.
+                    Gunakan informasi kontak yang aktif agar
+                    konselor dapat menghubungimu.
                   </p>
                 </div>
 
@@ -320,25 +338,28 @@ function Consultation() {
                   disabled={submitting}
                 >
                   {submitting ? "Mengirim..." : "Kirim Pengajuan"}
-                  {!submitting && <span>→</span>}
+
+                  {!submitting && <ArrowRight size={17} />}
                 </button>
               </div>
             </form>
           </section>
 
-          {/* Process Information */}
+          {/* INFORMASI PROSES */}
           <aside className="consultation-side-card">
-            <div className="consultation-side-icon">i</div>
+            <div className="consultation-side-icon">
+              <HeartHandshake size={21} />
+            </div>
 
             <span className="side-card-eyebrow">
-              PANDUAN KONSULTASI
+              PANDUAN KONSELING
             </span>
 
             <h3>Bagaimana proses konsultasi berlangsung?</h3>
 
             <p className="side-card-description">
-              Ikuti beberapa tahapan berikut setelah mengirim
-              pengajuan konsultasi.
+              Berikut tahapan yang akan kamu lalui setelah
+              mengirim pengajuan konsultasi.
             </p>
 
             <div className="consultation-process">
@@ -347,7 +368,8 @@ function Consultation() {
                 <div>
                   <strong>Kirim Pengajuan</strong>
                   <p>
-                    Sampaikan topik dan kebutuhan konsultasimu melalui form.
+                    Ceritakan kebutuhan dan topik yang ingin
+                    kamu diskusikan.
                   </p>
                 </div>
               </div>
@@ -355,9 +377,10 @@ function Consultation() {
               <div className="process-item">
                 <span className="process-number">02</span>
                 <div>
-                  <strong>Menunggu Tinjauan</strong>
+                  <strong>Menunggu Konselor</strong>
                   <p>
-                    Admin akan memeriksa pengajuan konsultasi yang masuk.
+                    Konselor sebaya akan meninjau pengajuan
+                    yang masuk.
                   </p>
                 </div>
               </div>
@@ -365,34 +388,39 @@ function Consultation() {
               <div className="process-item">
                 <span className="process-number">03</span>
                 <div>
-                  <strong>Diskusi Bersama Konsultan</strong>
+                  <strong>Mulai Konsultasi</strong>
                   <p>
-                    Konsultan akan menghubungi melalui metode kontak pilihanmu.
+                    Setelah diterima, konselor dapat
+                    menghubungimu melalui kontak yang diberikan.
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="consultation-side-note">
-              <strong>Tips sebelum konsultasi</strong>
+              <strong>Kamu tidak sendirian</strong>
               <p>
-                Siapkan informasi mengenai kondisi bisnis dan kendala
-                yang sedang kamu hadapi agar diskusi lebih terarah.
+                Konseling sebaya merupakan ruang untuk berbagi
+                cerita dan mendapatkan dukungan. Jika kamu
+                membutuhkan bantuan profesional, konselor dapat
+                membantu mengarahkanmu ke layanan yang sesuai.
               </p>
             </div>
           </aside>
         </div>
 
-        {/* Consultation History */}
+        {/* RIWAYAT KONSULTASI */}
         <section className="consultation-history">
           <div className="consultation-history-heading">
             <div>
               <span className="consultation-step">
                 AKTIVITAS KAMU
               </span>
+
               <h2>Riwayat Konsultasi</h2>
+
               <p>
-                Pantau perkembangan pengajuan konsultasimu di sini.
+                Pantau status pengajuan konsultasimu di sini.
               </p>
             </div>
 
@@ -408,11 +436,15 @@ function Consultation() {
             </div>
           ) : consultations.length === 0 ? (
             <div className="consultation-empty">
-              <div className="empty-history-icon">—</div>
+              <div className="empty-history-icon">
+                <ClipboardList size={22} />
+              </div>
+
               <h3>Belum Ada Konsultasi</h3>
+
               <p>
-                Pengajuan konsultasi yang kamu kirim akan muncul
-                di bagian ini.
+                Pengajuan konsultasi yang kamu kirim akan
+                muncul di bagian ini.
               </p>
             </div>
           ) : (
@@ -426,7 +458,9 @@ function Consultation() {
                     key={item.id}
                   >
                     <div className="history-item-main">
-                      <div className="history-item-icon">C</div>
+                      <div className="history-item-icon">
+                        <MessageCircle size={20} />
+                      </div>
 
                       <div className="history-item-content">
                         <h3>{item.topic}</h3>
@@ -449,7 +483,11 @@ function Consultation() {
                       </span>
 
                       <span className="history-contact">
-                        {item.preferred_contact || "Kontak belum dipilih"}
+                        {status.description}
+                      </span>
+
+                      <span className="history-contact">
+                        Kontak: {item.preferred_contact || "-"}
                       </span>
                     </div>
                   </article>

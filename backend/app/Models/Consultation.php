@@ -11,7 +11,7 @@ class Consultation extends Model
 
     protected $fillable = [
         'user_id',
-        'business_profile_id',
+        'counselor_id',
         'topic',
         'description',
         'preferred_contact',
@@ -20,13 +20,19 @@ class Consultation extends Model
         'consultation_notes',
     ];
 
+    /**
+     * Relasi konsultasi dengan mahasiswa.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function businessProfile()
+    /**
+     * Relasi konsultasi dengan konselor.
+     */
+    public function counselor()
     {
-        return $this->belongsTo(BusinessProfile::class);
+        return $this->belongsTo(User::class, 'counselor_id');
     }
 }

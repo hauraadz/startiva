@@ -1,15 +1,18 @@
+
 import { useState } from "react";
 import "./App.css";
 
 import ApiStatus from "./components/ApiStatus";
 import AuthModal from "./components/AuthModal";
 import StudentDashboard from "./components/StudentDashboard";
-import BusinessProfile from "./components/BusinessProfile";
+import CounselorDashboard from "./components/CounselorDashboard";
+
 import BusinessAssessment from "./pages/BusinessAssessment";
 import AssessmentHistory from "./pages/AssessmentHistory";
 import Consultation from "./pages/Consultation";
 import AssessmentStatistics from "./pages/AssessmentStatistics";
 import AIChat from "./pages/AIChat";
+import StudentProfile from "./pages/StudentProfile";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
@@ -17,6 +20,10 @@ const API_URL =
 function App() {
   const [authMode, setAuthMode] = useState(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
+
+  // =====================================
+  // DATA PENGGUNA
+  // =====================================
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -29,7 +36,10 @@ function App() {
     }
   });
 
+  // =====================================
   // LOGIN / REGISTER BERHASIL
+  // =====================================
+
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
     setCurrentPage("dashboard");
@@ -38,13 +48,16 @@ function App() {
     localStorage.setItem("startiva_user", JSON.stringify(user));
   };
 
+  // =====================================
   // LOGOUT
+  // =====================================
+
   const handleLogout = async () => {
     const token = localStorage.getItem("startiva_token");
 
     try {
       if (token) {
-        await fetch(`${API_URL}/logout`, {
+        await fetch(`${API_URL.replace(/\/$/, "")}/logout`, {
           method: "POST",
           headers: {
             Accept: "application/json",
@@ -64,21 +77,61 @@ function App() {
     }
   };
 
-  // NAVIGASI HALAMAN
+  // =====================================
+  // NAVIGASI
+  // =====================================
+
   const navigateTo = (page) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
-  // KEMBALI KE DASHBOARD
   const handleBackToDashboard = () => {
     navigateTo("dashboard");
   };
 
+  // =====================================
+  // CEK ROLE
+  // =====================================
+
+  const isMahasiswa = currentUser?.role === "mahasiswa";
+  const isKonselor = currentUser?.role === "konselor";
+
+  // =====================================
   // HALAMAN SETELAH LOGIN
+  // =====================================
+
   if (currentUser) {
+    const allowedPages = isMahasiswa
+      ? [
+          "dashboard",
+          "business-profile",
+          "business-assessment",
+          "assessment-history",
+          "consultation",
+          "ai-assistant",
+        ]
+      : isKonselor
+        ? [
+            "dashboard",
+            "consultation",
+            "assessment-statistics",
+          ]
+        : [];
+
+    const hasPageAccess = allowedPages.includes(currentPage);
+
     return (
       <div className="app authenticated-app">
+
+        {/* =====================================
+            NAVIGASI KEMBALI
+        ===================================== */}
+
         {currentPage !== "dashboard" && (
           <div className="page-navigation">
             <button
@@ -93,7 +146,12 @@ function App() {
         )}
 
         <main className="authenticated-content">
-          {currentPage === "dashboard" && (
+
+          {/* =====================================
+              DASHBOARD MAHASISWA
+          ===================================== */}
+
+          {currentPage === "dashboard" && isMahasiswa && (
             <StudentDashboard
               user={currentUser}
               onLogout={handleLogout}
@@ -101,34 +159,117 @@ function App() {
               onOpenAssessment={() => navigateTo("business-assessment")}
               onOpenHistory={() => navigateTo("assessment-history")}
               onOpenConsultation={() => navigateTo("consultation")}
-              onOpenStatistics={() => navigateTo("assessment-statistics")}
               onOpenAI={() => navigateTo("ai-assistant")}
             />
           )}
 
-          {currentPage === "business-profile" && (
-            <BusinessProfile />
+          {/* =====================================
+              DASHBOARD KONSELOR
+          ===================================== */}
+
+          {currentPage === "dashboard" && isKonselor && (
+            <CounselorDashboard
+              user={currentUser}
+              onLogout={handleLogout}
+              onOpenConsultation={() => navigateTo("consultation")}
+              onOpenStatistics={() => navigateTo("assessment-statistics")}
+            />
           )}
 
-          {currentPage === "business-assessment" && (
+          {/* =====================================
+              PROFIL MAHASISWA
+          ===================================== */}
+
+          {currentPage === "business-profile" && isMahasiswa && (
+            <StudentProfile user={currentUser} />
+          )}
+
+          {/* =====================================
+              RICE ASSESSMENT MAHASISWA
+          ===================================== */}
+
+          {currentPage === "business-assessment" && isMahasiswa && (
             <BusinessAssessment />
           )}
 
-          {currentPage === "assessment-history" && (
+          {/* =====================================
+              RIWAYAT ASSESSMENT MAHASISWA
+          ===================================== */}
+
+          {currentPage === "assessment-history" && isMahasiswa && (
             <AssessmentHistory />
           )}
 
-          {currentPage === "consultation" && (
+          {/* =====================================
+              KONSULTASI MAHASISWA
+          ===================================== */}
+
+          {currentPage === "consultation" && isMahasiswa && (
             <Consultation />
           )}
 
-          {currentPage === "assessment-statistics" && (
+          {/* =====================================
+              PENGELOLAAN KONSULTASI KONSELOR
+          ===================================== */}
+
+          {currentPage === "consultation" && isKonselor && (
+            <div className="page-placeholder">
+              <h2>Pengajuan Konsultasi</h2>
+
+              <p>
+                Kamu dapat melihat dan mengelola pengajuan
+                konsultasi melalui Dashboard Konselor.
+              </p>
+
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleBackToDashboard}
+              >
+                Kembali ke Dashboard
+              </button>
+            </div>
+          )}
+
+          {/* =====================================
+              STATISTIK ASSESSMENT KONSELOR
+          ===================================== */}
+
+          {currentPage === "assessment-statistics" && isKonselor && (
             <AssessmentStatistics />
           )}
 
-          {currentPage === "ai-assistant" && (
+          {/* =====================================
+              AI COMPANION MAHASISWA
+          ===================================== */}
+
+          {currentPage === "ai-assistant" && isMahasiswa && (
             <AIChat />
           )}
+
+          {/* =====================================
+              AKSES TIDAK DIIZINKAN
+          ===================================== */}
+
+          {!hasPageAccess && (
+            <div className="page-placeholder">
+              <h2>Halaman Tidak Tersedia</h2>
+
+              <p>
+                Maaf, akun kamu tidak memiliki akses
+                untuk membuka halaman ini.
+              </p>
+
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleBackToDashboard}
+              >
+                Kembali ke Dashboard
+              </button>
+            </div>
+          )}
+
         </main>
 
         <ApiStatus />
@@ -136,9 +277,15 @@ function App() {
     );
   }
 
+  // =====================================
   // LANDING PAGE SEBELUM LOGIN
+  // =====================================
+
   return (
     <div className="app landing-app">
+
+      {/* NAVBAR */}
+
       <header className="navbar">
         <a href="#beranda" className="logo">
           startiva<span>.</span>
@@ -147,7 +294,7 @@ function App() {
         <nav className="navbar-menu">
           <a href="#beranda">Beranda</a>
           <a href="#tentang">Tentang</a>
-          <a href="#fitur">Fitur</a>
+          <a href="#fitur">Layanan</a>
           <a href="#alur">Cara Kerja</a>
         </nav>
 
@@ -171,23 +318,26 @@ function App() {
       </header>
 
       <main>
+
         {/* HERO */}
+
         <section className="hero" id="beranda">
           <div className="hero-content">
             <div className="eyebrow">
               <span className="status-dot" />
-              STUDENT BUSINESS PLATFORM
+              STUDENT WELL-BEING PLATFORM
             </div>
 
             <h1>
-              Your idea deserves
+              You deserve
               <br />
-              <span>a great beginning.</span>
+              <span>to be heard.</span>
             </h1>
 
             <p>
-              Kenali potensi, ukur kesiapan, dan kembangkan
-              ide bisnis digital serta kreatifmu bersama Startiva.
+              Kenali kondisi dirimu, pahami kebutuhan emosional,
+              dan temukan dukungan melalui layanan konseling
+              sebaya bersama Startiva.
             </p>
 
             <div className="hero-actions">
@@ -196,7 +346,7 @@ function App() {
                 className="btn-primary"
                 onClick={() => setAuthMode("register")}
               >
-                Mulai Perjalanan
+                Mulai Sekarang
                 <span>→</span>
               </button>
 
@@ -207,27 +357,28 @@ function App() {
 
             <div className="hero-note">
               <span>✦</span>
-              Start small, grow with confidence.
+              A safe space to understand yourself.
             </div>
           </div>
 
           {/* HERO VISUAL */}
+
           <div className="hero-visual">
             <div className="visual-glow" />
 
             <div className="floating-card top-card">
-              <span className="card-icon">✦</span>
+              <span className="card-icon">♡</span>
 
               <div>
-                <strong>Business Potential</strong>
-                <small>Discover your strength</small>
+                <strong>You are not alone</strong>
+                <small>Every feeling matters</small>
               </div>
             </div>
 
             <div className="main-illustration">
               <div className="illustration-circle">
                 <div className="inner-circle">
-                  <span className="bulb">✧</span>
+                  <span className="bulb">♡</span>
 
                   <div className="sparkle one">✦</div>
                   <div className="sparkle two">✧</div>
@@ -237,7 +388,7 @@ function App() {
 
               <div className="illustration-label">
                 <span>01</span>
-                <strong>IDEA TO REALITY</strong>
+                <strong>YOUR STORY MATTERS</strong>
               </div>
             </div>
 
@@ -245,8 +396,8 @@ function App() {
               <div className="mini-avatar">S</div>
 
               <div>
-                <strong>Your next chapter</strong>
-                <small>Starts here.</small>
+                <strong>A little support</strong>
+                <small>Can make a difference.</small>
               </div>
 
               <span className="check-icon">✓</span>
@@ -258,48 +409,52 @@ function App() {
         </section>
 
         {/* ABOUT */}
+
         <section className="about section" id="tentang">
           <div className="section-label">ABOUT STARTIVA</div>
 
           <h2>
-            Every big business
+            Everyone deserves
             <br />
-            starts with <span>one idea.</span>
+            to feel <span>understood.</span>
           </h2>
 
           <p>
-            Startiva merupakan platform digital yang membantu mahasiswa
-            memahami kesiapan bisnis melalui asesmen dan mendapatkan
-            arahan pengembangan melalui layanan konsultasi.
+            Startiva merupakan platform konseling sebaya yang
+            membantu mahasiswa mengenali kondisi dirinya melalui
+            asesmen, memahami hasilnya, dan memperoleh dukungan
+            dari konselor sebaya maupun pendampingan AI.
           </p>
         </section>
 
         {/* FEATURES */}
+
         <section className="features section" id="fitur">
           <div className="section-heading">
             <div>
-              <div className="section-label">WHAT YOU CAN DO</div>
+              <div className="section-label">WHAT STARTIVA OFFERS</div>
 
               <h2>
-                Build your business <span>with direction.</span>
+                Understand yourself,
+                <span> one step at a time.</span>
               </h2>
             </div>
 
             <p>
-              Mulai dari menemukan ide hingga memahami langkah
-              pengembangan bisnis.
+              Ruang untuk mengenali diri, mendapatkan dukungan,
+              dan mengambil langkah positif.
             </p>
           </div>
 
           <div className="feature-grid">
             <article className="feature-card purple">
-              <div className="feature-number">01 / ASSESSMENT</div>
-              <div className="feature-icon">◈</div>
+              <div className="feature-number">01 / SELF ASSESSMENT</div>
+              <div className="feature-icon">♡</div>
 
-              <h3>Business Assessment</h3>
+              <h3>RICE Assessment</h3>
 
               <p>
-                Kenali tingkat kesiapan dan potensi bisnis melalui
+                Kenali kondisi dan kebutuhan dirimu melalui
                 asesmen yang terstruktur.
               </p>
 
@@ -307,28 +462,28 @@ function App() {
             </article>
 
             <article className="feature-card peach">
-              <div className="feature-number">02 / CONSULTATION</div>
+              <div className="feature-number">02 / PEER COUNSELING</div>
               <div className="feature-icon">✳</div>
 
-              <h3>Business Consultation</h3>
+              <h3>Konseling Sebaya</h3>
 
               <p>
-                Dapatkan arahan untuk mengembangkan ide, produk,
-                pemasaran, dan pengelolaan bisnis.
+                Dapatkan ruang bercerita dan dukungan dari
+                konselor sebaya yang tersedia.
               </p>
 
               <a href="#alur">Explore feature ↗</a>
             </article>
 
             <article className="feature-card green">
-              <div className="feature-number">03 / DEVELOPMENT</div>
-              <div className="feature-icon">↗</div>
+              <div className="feature-number">03 / AI COMPANION</div>
+              <div className="feature-icon">✧</div>
 
-              <h3>Growth Direction</h3>
+              <h3>AI Companion</h3>
 
               <p>
-                Pahami hasil asesmen dan temukan area yang perlu
-                ditingkatkan dalam perjalanan bisnismu.
+                Teman refleksi untuk membantu memahami hasil
+                asesmen dan menemukan langkah awal.
               </p>
 
               <a href="#alur">Explore feature ↗</a>
@@ -337,58 +492,71 @@ function App() {
         </section>
 
         {/* WORKFLOW */}
+
         <section className="workflow section" id="alur">
-          <div className="section-label">SIMPLE PROCESS</div>
+          <div className="section-label">HOW IT WORKS</div>
 
           <h2>
-            Start with a step, <span>grow with purpose.</span>
+            A small step toward
+            <span> a better you.</span>
           </h2>
 
           <div className="steps">
             <div className="step">
               <span>01</span>
               <h3>Create Account</h3>
-              <p>Daftar dan lengkapi profil mahasiswa.</p>
+              <p>
+                Buat akun mahasiswa untuk memulai perjalananmu
+                bersama Startiva.
+              </p>
             </div>
 
             <div className="step">
               <span>02</span>
-              <h3>Take Assessment</h3>
-              <p>Isi asesmen sesuai kondisi dan kebutuhanmu.</p>
+              <h3>Complete Assessment</h3>
+              <p>
+                Isi RICE Assessment untuk mengenali kondisi
+                dan kebutuhan dirimu.
+              </p>
             </div>
 
             <div className="step">
               <span>03</span>
-              <h3>View Your Result</h3>
+              <h3>Understand Your Result</h3>
               <p>
-                Pahami hasil dan aspek bisnis yang perlu dikembangkan.
+                Pelajari hasil asesmen dan rekomendasi
+                pendampingan yang tersedia.
               </p>
             </div>
 
             <div className="step">
               <span>04</span>
-              <h3>Get Consultation</h3>
-              <p>Ajukan konsultasi untuk langkah berikutnya.</p>
+              <h3>Get Support</h3>
+              <p>
+                Ajukan konsultasi dengan konselor sebaya
+                atau gunakan AI Companion.
+              </p>
             </div>
           </div>
         </section>
 
         {/* CTA */}
+
         <section className="cta section" id="daftar">
           <div>
             <div className="section-label">
-              YOUR JOURNEY STARTS HERE
+              YOUR STORY MATTERS
             </div>
 
             <h2>
-              Ready to turn your
+              You don't have to
               <br />
-              idea into <span>something real?</span>
+              figure it all <span>out alone.</span>
             </h2>
 
             <p>
-              Tidak harus sudah punya bisnis. Kamu bisa mulai
-              dari ide, potensi, dan rasa ingin tahu.
+              Mulai dengan mengenali dirimu. Tidak apa-apa
+              untuk bercerita dan mencari dukungan.
             </p>
           </div>
 
@@ -401,15 +569,17 @@ function App() {
             <span>→</span>
           </button>
         </section>
+
       </main>
 
       {/* FOOTER */}
+
       <footer className="footer">
         <a href="#beranda" className="logo">
           startiva<span>.</span>
         </a>
 
-        <p>Assess. Consult. Grow.</p>
+        <p>Understand. Connect. Grow.</p>
 
         <small>© 2026 Startiva. All rights reserved.</small>
       </footer>
@@ -417,6 +587,7 @@ function App() {
       <ApiStatus />
 
       {/* AUTH MODAL */}
+
       {authMode && (
         <AuthModal
           mode={authMode}
@@ -424,6 +595,7 @@ function App() {
           onSuccess={handleAuthSuccess}
         />
       )}
+
     </div>
   );
 }

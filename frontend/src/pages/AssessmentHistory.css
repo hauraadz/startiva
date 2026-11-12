@@ -1,6 +1,7 @@
 
 /* =================================
    STARTIVA - ASSESSMENT HISTORY
+   STUDENT WELL-BEING
    RED THEME
 ================================= */
 
@@ -25,7 +26,9 @@
   margin: 0 auto;
 }
 
-/* HEADER */
+/* =================================
+   HEADER
+================================= */
 
 .history-header {
   display: flex;
@@ -103,7 +106,9 @@
   border-radius: 50%;
 }
 
-/* STATISTICS */
+/* =================================
+   STATISTICS
+================================= */
 
 .history-stats {
   display: grid;
@@ -180,7 +185,9 @@
   line-height: 1.6;
 }
 
-/* SECTION HEADING */
+/* =================================
+   SECTION HEADING
+================================= */
 
 .history-section-heading {
   display: flex;
@@ -209,7 +216,9 @@
   margin-bottom: 42px;
 }
 
-/* LATEST RESULT */
+/* =================================
+   LATEST RESULT
+================================= */
 
 .latest-assessment-card {
   display: grid;
@@ -221,6 +230,10 @@
   border-radius: 20px;
   background: #fff;
   box-shadow: 0 7px 25px rgba(100, 44, 44, 0.035);
+}
+
+.latest-assessment-main {
+  min-width: 0;
 }
 
 .latest-result-label {
@@ -263,6 +276,14 @@
   margin: 12px 0 0;
   color: #a39a9e;
   font-size: 11px;
+}
+
+.latest-assessment-main small {
+  display: block;
+  margin-top: 10px;
+  color: #8a7b80;
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 .latest-assessment-divider {
@@ -308,6 +329,14 @@
   background: #fff0f0;
 }
 
+/* Neutral label for Student Well-being Assessment */
+
+.history-level.level-neutral {
+  color: #9b536b;
+  background: #f8e9ed;
+  border: 1px solid #f0d4dd;
+}
+
 .latest-date {
   display: flex;
   flex-direction: column;
@@ -348,12 +377,15 @@
 .history-detail-button:focus-visible,
 .history-view-button:focus-visible,
 .history-modal-close:focus-visible,
-.history-error button:focus-visible {
+.history-error button:focus-visible,
+.history-modal-footer button:focus-visible {
   outline: 3px solid rgba(201, 75, 82, 0.25);
   outline-offset: 3px;
 }
 
-/* HISTORY TABLE */
+/* =================================
+   HISTORY TABLE
+================================= */
 
 .history-list-section {
   margin-bottom: 30px;
@@ -478,7 +510,9 @@
   background: var(--history-red-soft);
 }
 
-/* EMPTY STATE */
+/* =================================
+   EMPTY STATE
+================================= */
 
 .history-empty {
   padding: 60px 25px;
@@ -517,7 +551,9 @@
   line-height: 1.8;
 }
 
-/* LOADING */
+/* =================================
+   LOADING
+================================= */
 
 .history-state {
   min-height: 300px;
@@ -545,7 +581,9 @@
   }
 }
 
-/* ERROR */
+/* =================================
+   ERROR
+================================= */
 
 .history-error {
   display: flex;
@@ -599,7 +637,9 @@
   background: var(--history-red-dark);
 }
 
-/* DETAIL MODAL */
+/* =================================
+   DETAIL MODAL
+================================= */
 
 .history-modal-overlay {
   position: fixed;
@@ -657,6 +697,8 @@
   background: #f9dede;
 }
 
+/* MODAL SCORE */
+
 .modal-result-score {
   margin: 25px 0;
   padding: 27px;
@@ -680,6 +722,22 @@
   letter-spacing: -1px;
 }
 
+.modal-result-score h3 small {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.modal-result-score p {
+  max-width: 420px;
+  margin: 12px auto 0;
+  color: #8a7b80;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* MODAL INFORMATION */
+
 .modal-detail-row {
   display: flex;
   justify-content: space-between;
@@ -698,6 +756,8 @@
   text-align: right;
 }
 
+/* MODAL ASPECTS */
+
 .modal-aspects,
 .modal-recommendations {
   margin-top: 23px;
@@ -713,6 +773,7 @@
 .modal-aspect-item {
   padding: 11px 0;
   border-bottom: 1px solid #f2eaea;
+  overflow-wrap: anywhere;
 }
 
 .modal-aspect-item > div {
@@ -728,6 +789,8 @@
   text-align: right;
   overflow-wrap: anywhere;
 }
+
+/* MODAL RECOMMENDATIONS */
 
 .modal-recommendations ul {
   padding-left: 20px;
@@ -747,6 +810,42 @@
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
+
+.modal-recommendations pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #777078;
+}
+
+/* MODAL FOOTER */
+
+.history-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.history-modal-footer button {
+  padding: 11px 24px;
+  border: none;
+  border-radius: 10px;
+  background: var(--history-red);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.history-modal-footer button:hover {
+  background: var(--history-red-dark);
+}
+
+/* =================================
+   ANIMATIONS
+================================= */
 
 @keyframes modal-fade-in {
   from {
@@ -770,7 +869,9 @@
   }
 }
 
-/* RESPONSIVE */
+/* =================================
+   RESPONSIVE TABLET
+================================= */
 
 @media (max-width: 900px) {
   .history-page {
@@ -786,6 +887,10 @@
     font-size: 28px;
   }
 }
+
+/* =================================
+   RESPONSIVE MOBILE
+================================= */
 
 @media (max-width: 700px) {
   .history-page {
@@ -852,6 +957,10 @@
   }
 }
 
+/* =================================
+   RESPONSIVE SMALL MOBILE
+================================= */
+
 @media (max-width: 480px) {
   .history-page {
     padding: 22px 14px;
@@ -913,6 +1022,10 @@
   }
 }
 
+/* =================================
+   ACCESSIBILITY
+================================= */
+
 @media (prefers-reduced-motion: reduce) {
   .history-page *,
   .history-page *::before,
@@ -921,5 +1034,100 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* =====================================
+   RECOMMENDATIONS
+===================================== */
+
+.modal-recommendations {
+  margin-top: 28px;
+}
+
+.modal-recommendations > h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #292929;
+}
+
+.recommendations-subtitle {
+  margin: 0 0 18px;
+  color: #888;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recommendation-card {
+  padding: 18px;
+  border: 1px solid #f0dfe2;
+  border-radius: 12px;
+  background: #fffafa;
+}
+
+.recommendation-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.recommendation-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #f8e5e9;
+  color: #b65e73;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recommendation-card-header h4 {
+  margin: 0;
+  color: #383838;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.recommendation-card > p {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.recommendation-score {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #f7e9ec;
+  color: #a85c70;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .recommendation-card {
+    padding: 14px;
+  }
+
+  .recommendation-card-header h4 {
+    font-size: 14px;
+  }
+
+  .recommendation-card > p {
+    font-size: 12px;
   }
 }

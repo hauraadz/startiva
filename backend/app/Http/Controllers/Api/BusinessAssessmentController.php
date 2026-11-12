@@ -10,134 +10,200 @@ use Illuminate\Support\Facades\Log;
 
 class BusinessAssessmentController extends Controller
 {
-    // Menyimpan hasil assessment dan mengirim data ke n8n
+    /**
+     * Menyimpan hasil Student Well-being Assessment.
+     */
     public function store(Request $request)
     {
+        $user = $request->user();
+
+        if (!$user || $user->role !== 'mahasiswa') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya mahasiswa yang dapat mengisi assessment.',
+            ], 403);
+        }
+
         $validated = $request->validate([
-            'answers' => 'required|array',
+            'answers' => 'required|array|min:1',
             'aspect_scores' => 'nullable|array',
             'recommendations' => 'nullable|array',
         ]);
 
-        // Mengambil seluruh nilai jawaban
+        // Mengambil seluruh skor jawaban dari skala 1-4.
         $scores = [];
 
-        array_walk_recursive($validated['answers'], function ($value) use (&$scores) {
-            if (is_numeric($value)) {
-                $scores[] = (int) $value;
+        array_walk_recursive(
+            $validated['answers'],
+            function ($value) use (&$scores) {
+                if (
+                    is_numeric($value) &&
+                    !is_bool($value)
+                ) {
+                    $scores[] = (int) $value;
+                }
             }
-        });
+        );
 
-        if (count($scores) === 0) {
+        if (empty($scores)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Jawaban assessment belum valid.'
+                'message' => 'Belum ditemukan jawaban dengan skor yang valid.',
             ], 422);
         }
 
-        // Menghitung skor di sisi server
-        $totalScore = array_sum($scores);
-        $maxScore = count($scores) * 4;
-
-        $percentage = round(($totalScore / $maxScore) * 100, 2);
-
-        if ($percentage >= 80) {
-            $readinessLevel = 'Sangat Siap';
-        } elseif ($percentage >= 65) {
-            $readinessLevel = 'Siap';
-        } elseif ($percentage >= 45) {
-            $readinessLevel = 'Cukup Siap';
-        } else {
-            $readinessLevel = 'Belum Siap';
+        // Memastikan setiap jawaban berada pada skala 1-4.
+        foreach ($scores as $score) {
+            if ($score < 1 || $score > 4) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Skor jawaban harus berada pada rentang 1 sampai 4.',
+                ], 422);
+            }
         }
 
-        // Menyimpan hasil ke database
-        $assessment = $request->user()
-            ->businessAssessments()
-            ->create([
-                'answers' => $validated['answers'],
-                'total_score' => $totalScore,
-                'score_percentage' => $percentage,
-                'readiness_level' => $readinessLevel,
-                'aspect_scores' => $validated['aspect_scores'] ?? null,
-                'recommendations' => $validated['recommendations'] ?? null,
-            ]);
+        // Perhitungan skor.
+        $totalScore = array_sum($scores);
+        $totalQuestions = count($scores);
 
-        // Mengirim hasil assessment ke n8n
+        $mean = $totalScore / $totalQuestions;
+
+        // Normalisasi skala 1-4 menjadi indikator 0-100.
+        // Bukan persentase kesehatan mental.
+        $percentage = round(
+            (($mean - 1) / 3) * 100,
+            2
+        );
+
+        // Simpan hasil assessment.
+        // readiness_level dipertahankan hanya untuk kompatibilitas
+        // dengan kolom lama yang masih NOT NULL.
+        // Nilainya bukan kategori atau interpretasi kondisi mahasiswa.
+        $assessment = BusinessAssessment::create([
+            'user_id' => $user->id,
+            'answers' => $validated['answers'],
+            'total_score' => $totalScore,
+            'score_percentage' => $percentage,
+            'readiness_level' => 'Refleksi mandiri',
+            'aspect_scores' => $validated['aspect_scores'] ?? [],
+            'recommendations' => $validated['recommendations'] ?? [],
+        ]);
+
+        // Kirim data assessment ke n8n.
         $n8nStatus = 'not_configured';
 
-        $webhookUrl = env('N8N_ASSESSMENT_WEBHOOK');
+        $webhookUrl = config('services.startiva.assessment_webhook');
 
-        if ($webhookUrl) {
+        if (!empty($webhookUrl)) {
             try {
                 $response = Http::timeout(15)->post($webhookUrl, [
+                    'event' => 'student_wellbeing_assessment_submitted',
                     'assessment_id' => $assessment->id,
-                    'user_id' => $request->user()->id,
-                    'answers' => $validated['answers'],
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'answers' => $assessment->answers,
+                    'total_questions' => $totalQuestions,
                     'total_score' => $totalScore,
-                    'max_score' => $maxScore,
+                    'mean' => round($mean, 2),
                     'score_percentage' => $percentage,
-                    'readiness_level' => $readinessLevel,
-                    'aspect_scores' => $validated['aspect_scores'] ?? [],
-                    'recommendations' => $validated['recommendations'] ?? [],
+                    'aspect_scores' => $assessment->aspect_scores,
+                    'recommendations' => $assessment->recommendations,
                     'created_at' => $assessment->created_at,
                 ]);
 
-                $n8nStatus = $response->successful()
-                    ? 'sent'
-                    : 'failed';
+                if ($response->successful()) {
+                    $n8nStatus = 'sent';
+                } else {
+                    $n8nStatus = 'failed';
 
-                if (!$response->successful()) {
-                    Log::warning('n8n gagal menerima assessment.', [
-                        'assessment_id' => $assessment->id,
-                        'response' => $response->body(),
-                    ]);
+                    Log::warning(
+                        'n8n gagal menerima Student Well-being Assessment.',
+                        [
+                            'assessment_id' => $assessment->id,
+                            'status' => $response->status(),
+                        ]
+                    );
                 }
             } catch (\Throwable $e) {
                 $n8nStatus = 'failed';
 
-                Log::error('Gagal menghubungi n8n.', [
-                    'assessment_id' => $assessment->id,
-                    'error' => $e->getMessage(),
-                ]);
+                Log::error(
+                    'Gagal menghubungi webhook n8n.',
+                    [
+                        'assessment_id' => $assessment->id,
+                        'error' => $e->getMessage(),
+                    ]
+                );
             }
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Hasil assessment berhasil disimpan.',
+            'message' => 'Student Well-being Assessment berhasil disimpan.',
             'n8n_status' => $n8nStatus,
-            'data' => $assessment,
+            'data' => [
+                'id' => $assessment->id,
+                'total_score' => $totalScore,
+                'total_questions' => $totalQuestions,
+                'mean' => round($mean, 2),
+                'score_percentage' => $percentage,
+                'answers' => $assessment->answers,
+                'aspect_scores' => $assessment->aspect_scores,
+                'recommendations' => $assessment->recommendations,
+                'created_at' => $assessment->created_at,
+            ],
         ], 201);
     }
 
-    // Mengambil riwayat assessment
+    /**
+     * Mengambil riwayat assessment mahasiswa.
+     */
     public function index(Request $request)
     {
-        $assessments = $request->user()
-            ->businessAssessments()
+        $user = $request->user();
+
+        if (!$user || $user->role !== 'mahasiswa') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses hanya untuk mahasiswa.',
+            ], 403);
+        }
+
+        $assessments = BusinessAssessment::where('user_id', $user->id)
             ->latest()
             ->get();
 
         return response()->json([
             'success' => true,
-            'message' => 'Riwayat assessment berhasil diambil.',
+            'message' => 'Riwayat Student Well-being Assessment berhasil diambil.',
             'data' => $assessments,
-        ]);
+        ], 200);
     }
 
-    // Mengambil hasil assessment terbaru
+    /**
+     * Mengambil hasil assessment terbaru.
+     */
     public function latest(Request $request)
     {
-        $assessment = $request->user()
-            ->businessAssessments()
+        $user = $request->user();
+
+        if (!$user || $user->role !== 'mahasiswa') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses hanya untuk mahasiswa.',
+            ], 403);
+        }
+
+        $assessment = BusinessAssessment::where('user_id', $user->id)
             ->latest()
             ->first();
 
         return response()->json([
             'success' => true,
-            'message' => 'Hasil assessment terbaru berhasil diambil.',
+            'message' => $assessment
+                ? 'Hasil Student Well-being Assessment terbaru berhasil diambil.'
+                : 'Mahasiswa belum mengisi assessment.',
             'data' => $assessment,
-        ]);
+        ], 200);
     }
 }

@@ -884,3 +884,145 @@
     font-size: 9px;
   }
 }
+
+
+/* ========================================
+   STARTIVA - TERRACOTTA THEME OVERRIDE
+======================================== */
+
+.consultation-page {
+  background: #FAF7F5;
+  color: #382A29;
+}
+
+.consultation-eyebrow,
+.consultation-step,
+.side-card-eyebrow {
+  color: #A94442;
+}
+
+.consultation-heading h1,
+.consultation-card-heading h2,
+.consultation-history-heading h2 {
+  color: #382A29;
+}
+
+.consultation-header-icon {
+  border-color: #F0DAD5;
+  background: linear-gradient(145deg, #FFF5F1, #FBECE9);
+  color: #A94442;
+}
+
+.consultation-form-card,
+.consultation-side-card,
+.consultation-history {
+  border-color: #F0E7E4;
+  box-shadow: 0 8px 28px rgba(90, 55, 48, 0.045);
+}
+
+.consultation-heading-icon,
+.consultation-side-icon,
+.business-info-icon,
+.empty-history-icon,
+.history-item-icon {
+  background: #FBECE9;
+  border-color: #F0DAD5;
+  color: #A94442;
+}
+
+.consultation-field label {
+  color: #382A29;
+}
+
+.consultation-field input:focus,
+.consultation-field textarea:focus,
+.consultation-field select:focus {
+  border-color: #A94442;
+  box-shadow: 0 0 0 3px rgba(169, 68, 66, 0.09);
+}
+
+.consultation-field label span {
+  color: #A94442;
+}
+
+.consultation-submit {
+  background: linear-gradient(135deg, #A94442, #853936);
+  box-shadow: 0 5px 13px rgba(169, 68, 66, 0.15);
+}
+
+.consultation-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #853936, #713B39);
+}
+
+.consultation-side-card {
+  border-color: #F0DAD5;
+  background: linear-gradient(155deg, #FFF9F6, #FBECE9);
+}
+
+.process-number {
+  border-color: #F0DAD5;
+  background: #F5DEDA;
+  color: #A94442;
+}
+
+.consultation-side-note {
+  border-color: #F0E7E4;
+}
+
+.consultation-side-note strong {
+  color: #A94442;
+}
+
+.consultation-count {
+  border-color: #F0DAD5;
+  background: #FBECE9;
+  color: #A94442;
+}
+
+.consultation-history-loader {
+  border-color: #F5DEDA;
+  border-top-color: #A94442;
+}
+
+.consultation-status.accepted {
+  background: #EAF5EE;
+  color: #4C9870;
+}
+
+.consultation-status.pending {
+  background: #FFF5E6;
+  color: #BD8733;
+}
+
+.consultation-status.completed {
+  background: #EAF5EE;
+  color: #4C9870;
+}
+
+.consultation-status.rejected {
+  background: #FBECE9;
+  color: #A94442;
+}
+
+.consultation-alert.error {
+  border-color: #F0DAD5;
+  background: #FBECE9;
+  color: #A94442;
+}
+
+.consultation-alert.success {
+  border-color: #D7EDDF;
+  background: #F0FAF3;
+  color: #327B4C;
+}
+
+.consultation-footer-note svg {
+  flex-shrink: 0;
+  color: #A94442;
+}
+
+@media (max-width: 700px) {
+  .consultation-page {
+    background: #FAF7F5;
+  }
+}

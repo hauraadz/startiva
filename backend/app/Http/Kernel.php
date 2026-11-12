@@ -26,6 +26,8 @@ class Kernel extends HttpKernel
     /**
      * The application's route middleware groups.
      *
+     * These middleware are run during every request.
+     *
      * @var array<string, array<int, class-string|string>>
      */
     protected $middlewareGroups = [
@@ -63,5 +65,8 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+
+        // Middleware Role Startiva
+        'role' => \App\Http\Middleware\CheckRole::class,
     ];
 }

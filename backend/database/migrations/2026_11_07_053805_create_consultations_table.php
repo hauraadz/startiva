@@ -12,20 +12,26 @@ return new class extends Migration
         Schema::create('consultations', function (Blueprint $table) {
             $table->id();
 
+            // Mahasiswa yang mengajukan konseling
             $table->foreignId('user_id')
-                ->constrained()
-                ->onDelete('cascade');
+                ->constrained('users')
+                ->cascadeOnDelete();
 
-            $table->foreignId('business_profile_id')
+            // Konselor yang menangani pengajuan
+            $table->foreignId('counselor_id')
                 ->nullable()
-                ->constrained('business_profiles')
+                ->constrained('users')
                 ->nullOnDelete();
 
             $table->string('topic');
             $table->text('description');
-            $table->string('preferred_contact')->nullable();
+
+            $table->string('preferred_contact', 100)->nullable();
             $table->string('contact_detail')->nullable();
+
+            // pending, accepted, rejected, completed
             $table->string('status')->default('pending');
+
             $table->text('consultation_notes')->nullable();
 
             $table->timestamps();

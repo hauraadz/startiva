@@ -6,49 +6,64 @@ const API_URL =
 
 const assessmentSections = [
   {
-    title: "Kesiapan Produk",
-    description: "Menilai kesiapan produk kuliner yang akan ditawarkan.",
+    title: "Kondisi Akademik",
+    description:
+      "Mengenali pengalaman dan tantangan yang kamu hadapi selama menjalani perkuliahan.",
     questions: [
-      "Saya sudah memiliki produk makanan atau minuman yang akan dijual.",
-      "Saya sudah menentukan keunikan atau keunggulan produk dibandingkan kompetitor.",
-      "Saya sudah memiliki standar kualitas dan rasa produk yang konsisten.",
+      "Saya merasa kewalahan menghadapi tugas dan tanggung jawab perkuliahan.",
+      "Saya mengalami kesulitan berkonsentrasi ketika belajar atau mengerjakan tugas.",
+      "Saya merasa terbebani oleh tuntutan akademik.",
     ],
+    recommendation:
+      "Cobalah menyusun prioritas tugas, membagi pekerjaan menjadi langkah kecil, dan mengatur waktu istirahat. Kamu juga bisa berdiskusi dengan teman atau konselor mengenai tekanan akademik yang dirasakan.",
   },
   {
-    title: "Kesiapan Pasar",
-    description: "Menilai pemahaman terhadap pelanggan dan peluang pasar.",
+    title: "Kondisi Emosional",
+    description:
+      "Mengenali pengalaman dalam memahami dan mengelola perasaan.",
     questions: [
-      "Saya sudah mengetahui siapa target pelanggan bisnis saya.",
-      "Saya sudah memahami kebutuhan dan preferensi target pelanggan.",
-      "Saya sudah melakukan riset terhadap kompetitor bisnis kuliner.",
+      "Saya mengalami kesulitan mengelola emosi ketika menghadapi masalah.",
+      "Saya merasa sulit menenangkan diri ketika sedang tertekan.",
+      "Saya kesulitan memahami apa yang sedang saya rasakan.",
     ],
+    recommendation:
+      "Luangkan waktu untuk mengenali dan menuliskan perasaanmu. Cobalah melakukan aktivitas yang membuatmu lebih tenang. Jika diperlukan, ceritakan pengalamanmu kepada orang yang kamu percaya atau konselor sebaya.",
   },
   {
-    title: "Kesiapan Pemasaran",
-    description: "Menilai strategi promosi dan pemasaran bisnis.",
+    title: "Hubungan Sosial",
+    description:
+      "Mengenali pengalaman dalam membangun hubungan dan memperoleh dukungan sosial.",
     questions: [
-      "Saya sudah memiliki strategi untuk mempromosikan produk.",
-      "Saya sudah menentukan media pemasaran yang akan digunakan.",
-      "Saya sudah memiliki rencana untuk menarik dan mempertahankan pelanggan.",
+      "Saya merasa kesulitan menyampaikan perasaan atau pendapat kepada orang lain.",
+      "Saya merasa kurang mendapatkan dukungan dari lingkungan sekitar.",
+      "Saya mengalami kesulitan dalam menjaga hubungan dengan teman atau orang lain.",
     ],
+    recommendation:
+      "Mulailah membangun komunikasi secara bertahap dengan orang yang kamu percaya. Mengikuti kegiatan positif dan membangun lingkungan pertemanan yang suportif juga dapat membantu.",
   },
   {
-    title: "Kesiapan Keuangan",
-    description: "Menilai perencanaan dan pengelolaan keuangan bisnis.",
+    title: "Pengelolaan Diri",
+    description:
+      "Mengenali pengalaman dalam mengatur aktivitas, motivasi, dan menghadapi masalah.",
     questions: [
-      "Saya sudah mengetahui kebutuhan modal awal bisnis.",
-      "Saya sudah memperkirakan biaya produksi dan operasional.",
-      "Saya sudah menentukan harga jual berdasarkan biaya dan keuntungan yang diharapkan.",
+      "Saya mengalami kesulitan menjaga motivasi dalam menjalani aktivitas sehari-hari.",
+      "Saya merasa kesulitan mengatur waktu dan rutinitas.",
+      "Saya merasa kesulitan menentukan langkah ketika menghadapi masalah.",
     ],
+    recommendation:
+      "Cobalah membuat rutinitas sederhana, menetapkan tujuan yang realistis, dan menentukan satu langkah kecil yang bisa dilakukan terlebih dahulu ketika menghadapi masalah.",
   },
   {
-    title: "Kesiapan Operasional",
-    description: "Menilai kesiapan proses dan pengelolaan bisnis.",
+    title: "Kebutuhan Dukungan",
+    description:
+      "Mengenali kebutuhan untuk bercerita dan memperoleh pendampingan.",
     questions: [
-      "Saya sudah memiliki rencana proses produksi produk.",
-      "Saya sudah mengetahui kebutuhan bahan baku dan pemasok.",
-      "Saya sudah memiliki rencana pengelolaan pesanan dan pelayanan pelanggan.",
+      "Saya memiliki masalah yang ingin saya ceritakan kepada seseorang.",
+      "Saya merasa membutuhkan seseorang untuk membantu saya memahami masalah yang sedang dihadapi.",
+      "Saya merasa membutuhkan pendampingan untuk menghadapi situasi yang sedang saya alami.",
     ],
+    recommendation:
+      "Kamu tidak harus menghadapi semuanya sendirian. Pertimbangkan untuk mengajukan konsultasi dengan konselor sebaya Startiva agar memiliki ruang untuk bercerita dan memperoleh dukungan.",
   },
 ];
 
@@ -64,7 +79,7 @@ const totalQuestions = assessmentSections.reduce(
   0
 );
 
-function BusinessAssessment() {
+function StudentWellbeingAssessment() {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -77,16 +92,16 @@ function BusinessAssessment() {
   );
 
   const completedSections = assessmentSections.filter(
-    (_, sectionIndex) =>
-      assessmentSections[sectionIndex].questions.every(
+    (section, sectionIndex) =>
+      section.questions.every(
         (_, questionIndex) =>
           answers[`${sectionIndex}-${questionIndex}`] !== undefined
       )
   ).length;
 
   const handleAnswer = (questionKey, value) => {
-    setAnswers((prev) => ({
-      ...prev,
+    setAnswers((previous) => ({
+      ...previous,
       [questionKey]: value,
     }));
 
@@ -94,8 +109,9 @@ function BusinessAssessment() {
   };
 
   const calculateResult = () => {
-    let totalScore = 0;
     const aspectResults = [];
+
+    let totalScore = 0;
 
     assessmentSections.forEach((section, sectionIndex) => {
       let sectionScore = 0;
@@ -107,52 +123,31 @@ function BusinessAssessment() {
 
       totalScore += sectionScore;
 
-      const maxSectionScore = section.questions.length * 4;
+      const questionCount = section.questions.length;
+      const averageScore = sectionScore / questionCount;
 
+      // Skor dinormalisasi untuk visualisasi saja.
+      // Tidak digunakan sebagai batas diagnosis atau kategori klinis.
       const percentage = Math.round(
-        (sectionScore / maxSectionScore) * 100
+        ((averageScore - 1) / 3) * 100
       );
 
       aspectResults.push({
         title: section.title,
         score: sectionScore,
+        maxScore: questionCount * 4,
+        averageScore: Number(averageScore.toFixed(2)),
         percentage,
+        recommendation: section.recommendation,
       });
     });
 
-    const maxScore = totalQuestions * 4;
-
-    const percentage = Math.round(
-      (totalScore / maxScore) * 100
-    );
-
-    let category;
-    let description;
-
-    if (percentage >= 80) {
-      category = "Sangat Siap";
-      description =
-        "Bisnis kamu menunjukkan tingkat kesiapan yang sangat baik. Pertahankan kekuatan yang sudah dimiliki dan mulai persiapkan pengembangan bisnis.";
-    } else if (percentage >= 65) {
-      category = "Siap";
-      description =
-        "Bisnis kamu sudah memiliki beberapa aspek kesiapan yang baik. Masih terdapat beberapa hal yang perlu ditingkatkan.";
-    } else if (percentage >= 45) {
-      category = "Cukup Siap";
-      description =
-        "Bisnis kamu sudah memiliki dasar untuk dikembangkan, tetapi masih membutuhkan persiapan pada beberapa aspek.";
-    } else {
-      category = "Belum Siap";
-      description =
-        "Bisnis kamu masih membutuhkan persiapan lebih lanjut sebelum dijalankan atau dikembangkan.";
-    }
+    const averageTotal = totalScore / totalQuestions;
 
     return {
       totalScore,
-      maxScore,
-      percentage,
-      category,
-      description,
+      maxScore: totalQuestions * 4,
+      averageTotal: Number(averageTotal.toFixed(2)),
       aspects: aspectResults,
     };
   };
@@ -160,52 +155,21 @@ function BusinessAssessment() {
   const getRecommendations = (assessmentResult) => {
     if (!assessmentResult) return [];
 
-    const recommendations = [];
+    const sortedAspects = [...assessmentResult.aspects].sort(
+      (a, b) => b.averageScore - a.averageScore
+    );
 
-    assessmentResult.aspects.forEach((aspect) => {
-      if (aspect.percentage < 65) {
-        switch (aspect.title) {
-          case "Kesiapan Produk":
-            recommendations.push(
-              "Evaluasi kualitas produk, tentukan keunggulan produk, dan buat standar produksi yang konsisten."
-            );
-            break;
-
-          case "Kesiapan Pasar":
-            recommendations.push(
-              "Lakukan riset target pelanggan, pelajari kebutuhan pasar, dan analisis kompetitor."
-            );
-            break;
-
-          case "Kesiapan Pemasaran":
-            recommendations.push(
-              "Susun strategi promosi, manfaatkan media sosial, dan tentukan cara mendapatkan pelanggan."
-            );
-            break;
-
-          case "Kesiapan Keuangan":
-            recommendations.push(
-              "Buat perencanaan modal, hitung biaya produksi, dan tentukan harga jual yang sesuai."
-            );
-            break;
-
-          case "Kesiapan Operasional":
-            recommendations.push(
-              "Susun alur produksi, tentukan pemasok bahan baku, dan buat sistem pengelolaan pesanan."
-            );
-            break;
-
-          default:
-            break;
-        }
-      }
-    });
-
-    return recommendations;
+    return sortedAspects
+      .filter((aspect) => aspect.averageScore > 1)
+      .map((aspect) => ({
+        title: aspect.title,
+        description: aspect.recommendation,
+        score: aspect.averageScore,
+      }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (answeredCount !== totalQuestions) {
       setError("Silakan jawab seluruh pertanyaan terlebih dahulu.");
@@ -228,12 +192,22 @@ function BusinessAssessment() {
 
       const payload = {
         answers,
-        aspect_scores: calculatedResult.aspects,
-        recommendations,
+        aspect_scores: calculatedResult.aspects.map((aspect) => ({
+          title: aspect.title,
+          score: aspect.score,
+          max_score: aspect.maxScore,
+          average_score: aspect.averageScore,
+          percentage: aspect.percentage,
+        })),
+        recommendations: recommendations.map((item) => ({
+          title: item.title,
+          description: item.description,
+          score: item.score,
+        })),
       };
 
       const response = await fetch(
-        `${API_URL.replace(/\/$/, "")}/business-assessment`,
+        `${API_URL.replace(/\/$/, "")}/mahasiswa/assessment`,
         {
           method: "POST",
           headers: {
@@ -259,21 +233,25 @@ function BusinessAssessment() {
         );
       }
 
-      if (!data.success) {
-        throw new Error(
-          data.message || "Hasil assessment gagal disimpan."
-        );
-      }
+      const savedAssessment =
+        data.data?.assessment ||
+        data.data ||
+        data.assessment ||
+        {};
 
       setResult({
         ...calculatedResult,
         recommendations,
-        assessmentId: data.data.id,
-        createdAt: data.data.created_at,
-        n8nStatus: data.n8n_status || "not_configured",
+        assessmentId: savedAssessment.id || null,
+        createdAt:
+          savedAssessment.created_at || new Date().toISOString(),
+        n8nStatus: data.n8n_status || null,
       });
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } catch (err) {
       console.error("Assessment error:", err);
 
@@ -302,7 +280,7 @@ function BusinessAssessment() {
         return {
           title: "Data berhasil dikirim ke n8n",
           description:
-            "Hasil assessment berhasil diteruskan ke sistem pengolahan n8n.",
+            "Jawaban assessment berhasil diteruskan ke sistem pengolahan n8n.",
           className: "n8n-success",
           symbol: "✓",
         };
@@ -311,21 +289,32 @@ function BusinessAssessment() {
         return {
           title: "Pengiriman ke n8n gagal",
           description:
-            "Hasil assessment tetap berhasil disimpan di database Laravel, tetapi belum berhasil diteruskan ke n8n.",
+            "Data assessment tetap tersimpan di Laravel, tetapi belum berhasil diteruskan ke n8n.",
           className: "n8n-failed",
           symbol: "!",
         };
 
       case "not_configured":
-      default:
         return {
-          title: "Integrasi n8n belum terhubung",
+          title: "Webhook n8n belum dikonfigurasi",
           description:
-            "Hasil assessment berhasil disimpan, tetapi URL Webhook n8n belum dikonfigurasi atau belum terbaca oleh Laravel.",
+            "Assessment tersimpan di Laravel, tetapi integrasi webhook belum dikonfigurasi.",
           className: "n8n-pending",
           symbol: "i",
         };
+
+      default:
+        return null;
     }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+
+    return new Date(date).toLocaleString("id-ID", {
+      dateStyle: "long",
+      timeStyle: "short",
+    });
   };
 
   return (
@@ -335,7 +324,6 @@ function BusinessAssessment() {
           --as-primary: #A94442;
           --as-primary-dark: #853936;
           --as-light: #FBECE9;
-          --as-blush: #F7E4DF;
           --as-text: #382A29;
           --as-muted: #8D7D7B;
           --as-border: #F0E7E4;
@@ -356,8 +344,6 @@ function BusinessAssessment() {
         .assessment-page button {
           font-family: inherit;
         }
-
-        /* HEADER */
 
         .assessment-topline {
           display: flex;
@@ -430,8 +416,6 @@ function BusinessAssessment() {
           line-height: 1.7;
         }
 
-        /* PROGRESS */
-
         .assessment-progress {
           position: sticky;
           top: 10px;
@@ -487,8 +471,6 @@ function BusinessAssessment() {
           font-size: 9px;
         }
 
-        /* SECTION */
-
         .assessment-section {
           padding: 23px;
           margin-bottom: 17px;
@@ -536,27 +518,24 @@ function BusinessAssessment() {
           line-height: 1.7;
         }
 
-        .section-complete {
+        .section-complete,
+        .section-incomplete {
           padding: 5px 9px;
           border-radius: 20px;
-          background: #EDF7F0;
-          color: #43805A;
           font-size: 8px;
           font-weight: 800;
           white-space: nowrap;
         }
 
-        .section-incomplete {
-          padding: 5px 9px;
-          border-radius: 20px;
-          background: #F7F2EF;
-          color: #927D75;
-          font-size: 8px;
-          font-weight: 700;
-          white-space: nowrap;
+        .section-complete {
+          background: #EDF7F0;
+          color: #43805A;
         }
 
-        /* QUESTIONS */
+        .section-incomplete {
+          background: #F7F2EF;
+          color: #927D75;
+        }
 
         .assessment-question {
           padding: 18px 0;
@@ -596,8 +575,6 @@ function BusinessAssessment() {
           font-size: 9px;
           font-weight: 800;
         }
-
-        /* ANSWER OPTIONS */
 
         .answer-options {
           display: grid;
@@ -645,8 +622,6 @@ function BusinessAssessment() {
           margin: 0;
           accent-color: var(--as-primary);
         }
-
-        /* SUBMIT */
 
         .assessment-submit-area {
           padding: 20px;
@@ -714,8 +689,6 @@ function BusinessAssessment() {
           font-size: 10px;
           line-height: 1.7;
         }
-
-        /* RESULT */
 
         .result-card {
           padding: 27px;
@@ -809,8 +782,6 @@ function BusinessAssessment() {
           color: #91672E;
         }
 
-        /* SCORE */
-
         .result-score {
           position: relative;
           overflow: hidden;
@@ -834,7 +805,7 @@ function BusinessAssessment() {
           display: block;
           margin: 12px 0 4px;
           color: var(--as-primary);
-          font-size: clamp(45px, 8vw, 58px);
+          font-size: clamp(38px, 8vw, 52px);
           font-weight: 800;
           letter-spacing: -2px;
         }
@@ -842,7 +813,7 @@ function BusinessAssessment() {
         .result-score h2 {
           margin: 4px 0 9px;
           color: var(--as-primary-dark);
-          font-size: 19px;
+          font-size: 17px;
           font-weight: 800;
         }
 
@@ -859,8 +830,6 @@ function BusinessAssessment() {
           font-size: 9px;
           font-weight: 700;
         }
-
-        /* RESULT ASPECTS */
 
         .result-section {
           margin-top: 29px;
@@ -911,8 +880,6 @@ function BusinessAssessment() {
           height: 7px;
         }
 
-        /* RECOMMENDATIONS */
-
         .recommendation-list {
           display: grid;
           gap: 10px;
@@ -956,6 +923,17 @@ function BusinessAssessment() {
           line-height: 1.8;
         }
 
+        .result-disclaimer {
+          padding: 13px 15px;
+          margin-top: 20px;
+          border: 1px solid #F0E0C8;
+          border-radius: 9px;
+          background: #FFF8EF;
+          color: #806B4D;
+          font-size: 9px;
+          line-height: 1.8;
+        }
+
         .result-footer {
           padding-top: 22px;
           margin-top: 25px;
@@ -985,8 +963,6 @@ function BusinessAssessment() {
           outline: 3px solid #E5B3AA;
           outline-offset: 3px;
         }
-
-        /* RESPONSIVE */
 
         @media (max-width: 760px) {
           .assessment-page {
@@ -1072,26 +1048,27 @@ function BusinessAssessment() {
       {!result ? (
         <>
           <div className="assessment-topline">
-            STARTIVA <span>/</span> BUSINESS ASSESSMENT
+            STARTIVA <span>/</span> STUDENT WELL-BEING
           </div>
 
           <div className="assessment-header">
-            <h1>Business Readiness Assessment</h1>
+            <h1>Student Well-being Assessment</h1>
 
             <p>
-              Kenali tingkat kesiapan bisnis kuliner kamu melalui
-              penilaian beberapa aspek penting sebelum memulai
-              atau mengembangkan bisnis.
+              Kenali pengalaman, kondisi, dan kebutuhan dukungan
+              dirimu melalui beberapa pernyataan refleksi diri.
             </p>
 
             <div className="assessment-note">
               <div className="assessment-note-icon">i</div>
+
               <div>
                 <strong>Sebelum memulai assessment</strong>
                 <p>
-                  Bacalah setiap pernyataan dengan cermat dan pilih
-                  jawaban yang paling sesuai dengan kondisi bisnis
-                  kamu saat ini. Seluruh pertanyaan wajib dijawab.
+                  Jawablah berdasarkan pengalaman yang kamu rasakan
+                  selama dua minggu terakhir. Tidak ada jawaban benar
+                  atau salah. Pilih jawaban yang paling menggambarkan
+                  pengalamanmu.
                 </p>
               </div>
             </div>
@@ -1112,10 +1089,11 @@ function BusinessAssessment() {
 
             <div className="progress-bottom">
               <span>
-                {answeredCount} dari {totalQuestions} pertanyaan dijawab
+                {answeredCount} dari {totalQuestions} pernyataan dijawab
               </span>
+
               <span>
-                {completedSections} dari {assessmentSections.length} bagian selesai
+                {completedSections} dari {assessmentSections.length} aspek selesai
               </span>
             </div>
           </div>
@@ -1152,13 +1130,14 @@ function BusinessAssessment() {
                           : "section-incomplete"
                       }
                     >
-                      {sectionComplete ? "Selesai" : `${sectionAnswered}/${section.questions.length}`}
+                      {sectionComplete
+                        ? "Selesai"
+                        : `${sectionAnswered}/${section.questions.length}`}
                     </span>
                   </div>
 
                   {section.questions.map((question, questionIndex) => {
                     const questionKey = `${sectionIndex}-${questionIndex}`;
-
                     const selectedAnswer = answers[questionKey];
 
                     return (
@@ -1200,7 +1179,10 @@ function BusinessAssessment() {
                                 value={option.value}
                                 checked={selectedAnswer === option.value}
                                 onChange={() =>
-                                  handleAnswer(questionKey, option.value)
+                                  handleAnswer(
+                                    questionKey,
+                                    option.value
+                                  )
                                 }
                               />
 
@@ -1226,14 +1208,14 @@ function BusinessAssessment() {
               <div className="submit-information">
                 <strong>
                   {answeredCount === totalQuestions
-                    ? "Semua pertanyaan sudah dijawab!"
-                    : "Selesaikan seluruh pertanyaan"}
+                    ? "Semua pernyataan sudah dijawab!"
+                    : "Selesaikan seluruh pernyataan"}
                 </strong>
 
                 <p>
                   {answeredCount === totalQuestions
-                    ? "Kirim jawaban kamu untuk melihat hasil dan rekomendasi kesiapan bisnis."
-                    : `Masih ada ${totalQuestions - answeredCount} pertanyaan yang belum dijawab.`}
+                    ? "Kirim jawaban untuk melihat ringkasan kondisi dan rekomendasi dukungan."
+                    : `Masih ada ${totalQuestions - answeredCount} pernyataan yang belum dijawab.`}
                 </p>
               </div>
 
@@ -1245,6 +1227,7 @@ function BusinessAssessment() {
                 {loading
                   ? "Menyimpan Hasil Assessment..."
                   : "Lihat Hasil Assessment"}
+
                 {!loading && <span>→</span>}
               </button>
             </div>
@@ -1256,28 +1239,35 @@ function BusinessAssessment() {
             STARTIVA / ASSESSMENT RESULT
           </div>
 
-          <h1>Hasil Assessment Bisnis</h1>
+          <h1>Ringkasan Hasil Assessment</h1>
 
           <p className="result-description">
-            Berikut hasil penilaian kesiapan bisnis berdasarkan
-            jawaban yang telah kamu berikan.
+            Berikut ringkasan jawaban dan gambaran aspek yang
+            mungkin membutuhkan perhatian atau dukungan lebih lanjut.
           </p>
 
           <div className="saved-info">
             <strong>✓ Hasil assessment berhasil disimpan.</strong>
-            Data telah tersimpan di database Laravel.
+            Jawabanmu telah tersimpan di database Laravel.
             <br />
-            ID Assessment: #{result.assessmentId}
+            {result.assessmentId
+              ? `ID Assessment: #${result.assessmentId}`
+              : "ID assessment tidak dikirim oleh server."}
+            <br />
+            Waktu pengisian: {formatDate(result.createdAt)}
           </div>
 
           {(() => {
             const status = getN8nStatus();
+
+            if (!status) return null;
 
             return (
               <div className={`n8n-status ${status.className}`}>
                 <div className="n8n-status-symbol">
                   {status.symbol}
                 </div>
+
                 <div>
                   <strong>{status.title}</strong>
                   {status.description}
@@ -1288,14 +1278,21 @@ function BusinessAssessment() {
 
           <div className="result-score">
             <div className="result-score-label">
-              BUSINESS READINESS SCORE
+              RINGKASAN JAWABAN
             </div>
 
-            <strong>{result.percentage}%</strong>
+            <strong>
+              {result.averageTotal.toFixed(2)} / 4
+            </strong>
 
-            <h2>{result.category}</h2>
+            <h2>Rata-rata Persetujuan</h2>
 
-            <p>{result.description}</p>
+            <p>
+              Angka ini menunjukkan rata-rata tingkat persetujuanmu
+              terhadap seluruh pernyataan. Nilai yang lebih tinggi
+              berarti kamu lebih banyak menyetujui pernyataan tentang
+              tantangan atau kebutuhan dukungan.
+            </p>
 
             <small>
               Total skor: {result.totalScore} / {result.maxScore}
@@ -1303,17 +1300,21 @@ function BusinessAssessment() {
           </div>
 
           <div className="result-section">
-            <h3>Hasil Setiap Aspek</h3>
+            <h3>Ringkasan Setiap Aspek</h3>
 
             <p className="result-section-description">
-              Berikut tingkat kesiapan bisnis berdasarkan lima aspek penilaian.
+              Perhatikan aspek yang memperoleh rata-rata persetujuan
+              lebih tinggi. Aspek tersebut dapat menjadi bahan refleksi
+              dan percakapan bersama konselor.
             </p>
 
             {result.aspects.map((aspect) => (
               <div className="aspect-result" key={aspect.title}>
                 <div className="aspect-result-top">
                   <strong>{aspect.title}</strong>
-                  <span>{aspect.percentage}%</span>
+                  <span>
+                    {aspect.averageScore.toFixed(2)} / 4
+                  </span>
                 </div>
 
                 <div className="progress-track">
@@ -1327,30 +1328,44 @@ function BusinessAssessment() {
           </div>
 
           <div className="result-section">
-            <h3>Rekomendasi Pengembangan</h3>
+            <h3>Rekomendasi Dukungan</h3>
 
             <p className="result-section-description">
-              Beberapa hal yang dapat kamu lakukan untuk meningkatkan kesiapan bisnis.
+              Rekomendasi berikut merupakan saran refleksi berdasarkan
+              aspek yang lebih banyak kamu setujui.
             </p>
 
             {result.recommendations.length > 0 ? (
               <ul className="recommendation-list">
                 {result.recommendations.map((item, index) => (
-                  <li key={index}>
+                  <li key={item.title}>
                     <span className="recommendation-bullet">
                       {index + 1}
                     </span>
-                    <span>{item}</span>
+
+                    <span>
+                      <strong>{item.title}</strong>
+                      <br />
+                      {item.description}
+                    </span>
                   </li>
                 ))}
               </ul>
             ) : (
               <div className="recommendation-empty">
-                Seluruh aspek bisnis kamu sudah menunjukkan kesiapan
-                yang baik. Pertahankan kondisi ini dan lanjutkan
-                pengembangan strategi bisnis.
+                Kamu memilih sangat tidak setuju pada seluruh
+                pernyataan. Tetap jaga keseimbangan aktivitas,
+                hubungan sosial, dan waktu istirahatmu.
               </div>
             )}
+          </div>
+
+          <div className="result-disclaimer">
+            <strong>Perlu diketahui:</strong> Hasil ini merupakan
+            ringkasan refleksi diri, bukan diagnosis atau penilaian
+            kondisi kesehatan mental. Jika kamu merasa membutuhkan
+            dukungan, kamu dapat berbicara dengan orang tepercaya
+            atau mengajukan konsultasi dengan konselor.
           </div>
 
           <div className="result-footer">
@@ -1368,4 +1383,4 @@ function BusinessAssessment() {
   );
 }
 
-export default BusinessAssessment;
+export default StudentWellbeingAssessment;

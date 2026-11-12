@@ -3,16 +3,28 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\BusinessAssessment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AIController extends Controller
 {
+    /**
+     * STARTIVA AI CHAT
+     *
+     * POST /api/mahasiswa/ai/chat
+     *
+     * AI menggunakan Hermes Gateway.
+     * Hanya dapat digunakan oleh mahasiswa.
+     */
     public function chat(Request $request)
     {
-        // Memastikan request masuk ke controller
-        Log::info('STARTIVA AI: Request masuk ke AIController');
+        Log::info('STARTIVA AI: Request masuk.');
+
+        // =============================================
+        // 1. VALIDASI REQUEST
+        // =============================================
 
         $validated = $request->validate([
             'message' => 'required|string|max:3000',
@@ -21,142 +33,215 @@ class AIController extends Controller
             'history.*.content' => 'required|string|max:3000',
         ]);
 
+        // =============================================
+        // 2. VALIDASI PENGGUNA
+        // =============================================
+
+        $user = $request->user();
+
+        if (!$user || $user->role !== 'mahasiswa') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fitur Startiva AI hanya tersedia untuk mahasiswa.',
+            ], 403);
+        }
+
+        // =============================================
+        // 3. KONFIGURASI HERMES
+        // =============================================
+
         $apiUrl = config('services.hermes.url');
         $apiKey = config('services.hermes.key');
 
-        // Memeriksa konfigurasi Hermes
-        if (!$apiUrl || !$apiKey) {
+        if (empty($apiUrl) || empty($apiKey)) {
             Log::error('STARTIVA AI: Konfigurasi Hermes tidak tersedia.');
 
             return response()->json([
                 'success' => false,
-                'message' => 'Konfigurasi Hermes belum tersedia.'
+                'message' => 'Konfigurasi Hermes belum tersedia.',
             ], 500);
         }
 
-        // Mengambil pengguna yang sedang login
-        $user = $request->user();
+        // =============================================
+        // 4. MENGAMBIL STUDENT WELL-BEING ASSESSMENT
+        // =============================================
 
-        // Mengambil profil bisnis pengguna
-        $businessProfile = $user->businessProfile;
-
-        // Mengambil assessment terbaru milik pengguna
-        $latestAssessment = $user->businessAssessments()
+        $latestAssessment = BusinessAssessment::query()
+            ->where('user_id', $user->id)
+            ->whereNotNull('aspect_scores')
             ->latest()
             ->first();
 
-        // Menyusun informasi profil bisnis
-        $profileContext = $businessProfile ? [
-            'nama_bisnis' => $businessProfile->business_name,
-            'tahap_bisnis' => $businessProfile->business_stage,
-            'kategori_bisnis' => $businessProfile->business_category,
-            'ide_bisnis' => $businessProfile->business_idea,
-            'deskripsi_produk' => $businessProfile->product_description,
-            'target_pasar' => $businessProfile->target_market,
-        ] : null;
+        // =============================================
+        // 5. MENYUSUN KONTEKS ASSESSMENT
+        // =============================================
 
-        // Menyusun informasi assessment terbaru
-        $assessmentContext = $latestAssessment ? [
-            'tanggal_assessment' => $latestAssessment->created_at,
-            'jawaban' => $latestAssessment->answers,
-            'total_skor' => $latestAssessment->total_score,
-            'persentase_kesiapan' => $latestAssessment->score_percentage,
-            'tingkat_kesiapan' => $latestAssessment->readiness_level,
-            'skor_per_aspek' => $latestAssessment->aspect_scores,
-            'rekomendasi_assessment' => $latestAssessment->recommendations,
-        ] : null;
+        $assessmentContext = null;
 
-        // Menggabungkan seluruh konteks bisnis
-        $businessContext = [
-            'profil_bisnis' => $profileContext,
-            'hasil_assessment_terbaru' => $assessmentContext,
+        if ($latestAssessment) {
+            $assessmentContext = [
+                'tanggal_assessment' => $latestAssessment->created_at,
+                'jawaban' => $latestAssessment->answers,
+                'total_skor' => $latestAssessment->total_score,
+                'indikator_normalisasi' => $latestAssessment->score_percentage,
+                'skor_per_aspek' => $latestAssessment->aspect_scores,
+                'rekomendasi' => $latestAssessment->recommendations,
+            ];
+        }
+
+        $context = [
+            'nama_mahasiswa' => $user->name,
+            'hasil_student_wellbeing_assessment' => $assessmentContext,
+            'status_assessment' => $latestAssessment
+                ? 'Sudah mengisi assessment'
+                : 'Belum mengisi assessment',
         ];
 
-        // Mengubah konteks menjadi JSON
-        $businessContextJson = json_encode(
-            $businessContext,
+        $contextJson = json_encode(
+            $context,
             JSON_PRETTY_PRINT |
             JSON_UNESCAPED_UNICODE |
             JSON_UNESCAPED_SLASHES
         );
 
-        if ($businessContextJson === false) {
-            $businessContextJson = '{}';
+        if ($contextJson === false) {
+            $contextJson = '{}';
         }
 
-        // System prompt Startiva AI
+        // =============================================
+        // 6. SYSTEM PROMPT STARTIVA AI
+        // =============================================
+
         $systemPrompt = <<<PROMPT
-Kamu adalah Startiva AI Business Assistant, asisten bisnis digital
-yang membantu mahasiswa mengembangkan ide dan kesiapan bisnis.
+Kamu adalah Startiva AI, teman pendamping mahasiswa
+di platform Konselor Sebaya bernama Startiva.
 
-TUJUAN UTAMA:
-Membantu mahasiswa memahami kondisi bisnisnya, mengembangkan ide,
-meningkatkan kesiapan bisnis, dan menentukan langkah pengembangan
-yang sesuai dengan kebutuhannya.
+PERAN UTAMA:
 
-DATA BISNIS PENGGUNA:
-{$businessContextJson}
+Kamu merupakan asisten AI yang membantu mahasiswa mendapatkan
+dukungan awal, memahami kondisi dirinya, dan menemukan langkah
+bantuan yang sesuai.
 
-TUGASMU:
-1. Membantu pengguna memahami hasil Business Assessment.
-2. Menjelaskan tingkat kesiapan bisnis berdasarkan hasil assessment.
-3. Mengidentifikasi kekuatan dan kelemahan bisnis.
-4. Memberikan saran pengembangan ide dan produk.
-5. Membantu menentukan target pasar.
-6. Menyusun strategi pemasaran yang sesuai.
-7. Memberikan rekomendasi pengembangan model bisnis.
-8. Membantu menyusun langkah pengembangan bisnis secara bertahap.
+Kamu bukan psikolog, psikiater, dokter, atau pengganti konselor manusia.
 
-ATURAN PENTING:
-- Gunakan data bisnis pengguna sebagai konteks utama jawaban.
-- Sesuaikan rekomendasi dengan tahap dan kategori bisnis pengguna.
-- Jika pengguna bertanya tentang hasil assessment, gunakan data
-  assessment terbaru yang tersedia.
-- Jelaskan skor dan persentase sesuai data yang diberikan.
-- Jangan mengubah, menebak, atau mengarang hasil assessment.
-- Jangan menganggap data yang tidak tersedia sebagai fakta.
-- Jika profil bisnis belum tersedia, tanyakan informasi yang diperlukan.
-- Jika assessment belum tersedia, jelaskan bahwa pengguna belum
-  memiliki hasil assessment yang dapat dijadikan acuan.
-- Berikan rekomendasi yang praktis, realistis, dan sesuai kemampuan
-  mahasiswa.
-- Jelaskan alasan di balik setiap rekomendasi.
-- Gunakan bahasa Indonesia yang ramah, jelas, dan mudah dipahami.
-- Gunakan poin-poin atau tahapan jika membantu memperjelas jawaban.
-- Hindari jawaban terlalu panjang untuk pertanyaan sederhana.
+DATA MAHASISWA:
+
+{$contextJson}
+
+TUJUAN STARTIVA AI:
+
+1. Menjadi teman percakapan yang ramah dan suportif.
+2. Membantu mahasiswa mengungkapkan perasaan dan kesulitannya.
+3. Membantu mahasiswa memahami hasil Student Well-being Assessment.
+4. Memberikan dukungan awal yang sesuai.
+5. Membantu mahasiswa mengenali kebutuhan pendampingan.
+6. Mengarahkan mahasiswa kepada konselor sebaya manusia jika diperlukan.
+
+ATURAN MEMAHAMI ASSESSMENT:
+
+- Gunakan hasil assessment terbaru yang tersedia.
+- Assessment terdiri dari lima aspek:
+  Kondisi Akademik, Kondisi Emosional, Hubungan Sosial,
+  Pengelolaan Diri, dan Kebutuhan Dukungan.
+- Jelaskan hasil berdasarkan data yang benar-benar diberikan.
+- Jangan mengarang skor, jawaban, atau rekomendasi.
+- Skor yang lebih tinggi menunjukkan tingkat persetujuan
+  yang lebih tinggi terhadap pernyataan kesulitan atau kebutuhan dukungan.
+- Skor bukan ukuran diagnosis atau kondisi kesehatan mental.
+- Jangan menyebut indikator normalisasi sebagai persentase kesehatan mental.
+- Jangan membuat kesimpulan psikologis hanya dari angka assessment.
+- Jika mahasiswa belum mengisi assessment, jelaskan bahwa belum ada
+  hasil yang dapat digunakan sebagai konteks.
+- Jika data suatu aspek tidak tersedia, sampaikan keterbatasan tersebut.
+
+ATURAN PENDAMPINGAN:
+
+- Dengarkan cerita mahasiswa tanpa menghakimi.
+- Gunakan bahasa Indonesia yang ramah, natural, dan mudah dipahami.
+- Tunjukkan empati tanpa berpura-pura memiliki pengalaman manusia.
+- Berikan respons yang relevan dengan cerita mahasiswa.
+- Ajukan pertanyaan lanjutan jika diperlukan.
+- Berikan saran sederhana dan realistis.
+- Jangan memaksakan solusi kepada mahasiswa.
+- Jangan membuat mahasiswa merasa bersalah atas kondisinya.
+
+BATASAN AI:
+
+- Jangan memberikan diagnosis gangguan mental.
+- Jangan meresepkan obat atau memberikan instruksi pengobatan.
+- Jangan mengklaim hasil assessment sebagai diagnosis.
+- Jangan mengaku sebagai konselor manusia.
+- Jangan menggantikan pendampingan profesional.
+- Jangan menjamin kerahasiaan mutlak yang tidak dapat kamu pastikan.
+
+PENGARAHAN KE KONSELOR MANUSIA:
+
+- Jika mahasiswa membutuhkan pendampingan lebih lanjut,
+  sarankan fitur konsultasi dengan konselor sebaya di Startiva.
+- Jelaskan bahwa konselor manusia dapat memberikan pendampingan langsung.
+- Jangan mengarang nama, nomor telepon, jadwal, atau ketersediaan konselor.
+- Jangan mengatakan konsultasi sudah dibuat jika mahasiswa
+  belum mengirim pengajuan melalui fitur konsultasi.
+
+KONDISI DARURAT:
+
+Jika mahasiswa menyampaikan keinginan menyakiti diri sendiri,
+bunuh diri, atau membahayakan orang lain:
+
+- Tanggapi dengan empati dan serius.
+- Jangan menghakimi atau meremehkan kondisinya.
+- Dorong mahasiswa segera menghubungi orang tepercaya
+  yang dapat mendampinginya secara langsung.
+- Sarankan mencari bantuan profesional atau layanan darurat setempat.
+- Jika terdapat bahaya langsung, arahkan mahasiswa untuk segera
+  pergi ke IGD atau menghubungi layanan darurat.
+- Jangan hanya mengandalkan percakapan dengan AI.
 
 GAYA KOMUNIKASI:
-Bersikaplah seperti konsultan bisnis yang ramah, suportif,
-profesional, dan membantu mahasiswa belajar mengembangkan bisnisnya.
+
+- Gunakan bahasa Indonesia.
+- Ramah, hangat, suportif, dan tidak kaku.
+- Hindari istilah medis yang tidak diperlukan.
+- Jangan selalu memberikan daftar panjang.
+- Sesuaikan panjang jawaban dengan kebutuhan mahasiswa.
+- Jangan mengulang sapaan secara berlebihan.
+
+IDENTITAS:
+
+Nama kamu adalah Startiva AI.
+Kamu adalah pendamping AI di Startiva yang membantu mahasiswa
+mendapatkan dukungan awal dan terhubung dengan konselor manusia.
 PROMPT;
 
-        // Menyusun pesan untuk Hermes
+        // =============================================
+        // 7. MENYUSUN PESAN HERMES
+        // =============================================
+
         $messages = [
             [
                 'role' => 'system',
-                'content' => $systemPrompt
-            ]
+                'content' => $systemPrompt,
+            ],
         ];
 
-        // Memasukkan riwayat percakapan
         foreach ($validated['history'] ?? [] as $item) {
             $messages[] = [
                 'role' => $item['role'],
-                'content' => $item['content']
+                'content' => $item['content'],
             ];
         }
 
-        // Memasukkan pesan terbaru
         $messages[] = [
             'role' => 'user',
-            'content' => $validated['message']
+            'content' => $validated['message'],
         ];
 
+        // =============================================
+        // 8. MENGHUBUNGI HERMES GATEWAY
+        // =============================================
+
         try {
-            Log::info('STARTIVA AI: Menghubungi Hermes Gateway', [
-                'url' => $apiUrl,
-                'model' => 'hermes-agent',
-                'has_business_profile' => $businessProfile !== null,
+            Log::info('STARTIVA AI: Menghubungi Hermes Gateway.', [
                 'has_assessment' => $latestAssessment !== null,
             ]);
 
@@ -168,36 +253,45 @@ PROMPT;
                     [
                         'model' => 'hermes-agent',
                         'messages' => $messages,
-                        'stream' => false
+                        'stream' => false,
                     ]
                 );
 
-            $result = $response->json();
+            // =============================================
+            // 9. MENANGANI HTTP ERROR
+            // =============================================
 
-            // Menangani HTTP error dari Hermes
             if (!$response->successful()) {
-                Log::error('STARTIVA AI: Hermes HTTP Error', [
+                Log::error('STARTIVA AI: Hermes HTTP Error.', [
                     'status' => $response->status(),
-                    'response' => $response->body()
+                    'response' => $response->body(),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Hermes gagal memproses pesan.',
-                    'detail' => 'HTTP ' . $response->status()
+                    'message' => 'Startiva AI gagal memproses pesan.',
+                    'detail' => 'HTTP ' . $response->status(),
                 ], 502);
             }
 
-            // Mengambil jawaban dari Hermes
+            $result = $response->json();
+
+            // =============================================
+            // 10. MENGAMBIL JAWABAN HERMES
+            // =============================================
+
             $answer = data_get(
                 $result,
                 'choices.0.message.content'
             );
 
-            // Menangani content berbentuk array
             if (is_array($answer)) {
                 $answer = collect($answer)
                     ->map(function ($item) {
+                        if (is_string($item)) {
+                            return $item;
+                        }
+
                         return is_array($item)
                             ? ($item['text'] ?? '')
                             : '';
@@ -206,35 +300,44 @@ PROMPT;
                     ->implode("\n");
             }
 
-            // Memastikan respons tidak kosong
-            if (!is_string($answer) || trim($answer) === '') {
-                Log::error('STARTIVA AI: Respons Hermes kosong', [
-                    'response' => $result ?? $response->body()
-                ]);
+            // =============================================
+            // 11. VALIDASI JAWABAN
+            // =============================================
+
+            if (
+                !is_string($answer) ||
+                trim($answer) === ''
+            ) {
+                Log::error('STARTIVA AI: Respons Hermes kosong.');
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Hermes memberikan respons kosong.',
-                    'detail' => 'Periksa konfigurasi provider AI Hermes.'
+                    'message' => 'Startiva AI belum dapat memberikan jawaban.',
                 ], 502);
             }
+
+            // =============================================
+            // 12. RESPONSE BERHASIL
+            // =============================================
 
             Log::info('STARTIVA AI: Respons berhasil diterima.');
 
             return response()->json([
                 'success' => true,
-                'reply' => trim($answer)
-            ]);
+                'message' => 'Pesan berhasil diproses.',
+                'reply' => trim($answer),
+                'has_assessment' => $latestAssessment !== null,
+            ], 200);
 
         } catch (\Throwable $e) {
-            Log::error('STARTIVA AI: Koneksi Hermes gagal', [
-                'error' => $e->getMessage()
+            Log::error('STARTIVA AI: Koneksi Hermes gagal.', [
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak dapat terhubung ke Hermes Gateway.'
-            ], 500);
+                'message' => 'Tidak dapat terhubung ke Hermes Gateway.',
+            ], 502);
         }
     }
 }

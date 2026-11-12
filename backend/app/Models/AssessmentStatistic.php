@@ -9,6 +9,8 @@ class AssessmentStatistic extends Model
 {
     use HasFactory;
 
+    protected $table = 'assessment_statistics';
+
     protected $fillable = [
         'total_assessments',
         'total_responses',
@@ -20,9 +22,11 @@ class AssessmentStatistic extends Model
     ];
 
     protected $casts = [
-        'frequency' => 'array',
+        'total_assessments' => 'integer',
+        'total_responses' => 'integer',
         'mean' => 'float',
         'standard_deviation' => 'float',
+        'frequency' => 'array',
         'average_score_percentage' => 'float',
         'calculated_at' => 'datetime',
     ];

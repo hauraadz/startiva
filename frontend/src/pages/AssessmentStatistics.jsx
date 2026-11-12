@@ -1,21 +1,49 @@
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  Activity,
+  BarChart3,
+  ClipboardList,
+  RefreshCw,
+  Users,
+  Calculator,
+  CalendarDays,
+  AlertCircle,
+  ChartNoAxesColumn,
+} from "lucide-react";
+
 import "./AssessmentStatistics.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
+// =====================================
+// FORMAT ANGKA
+// =====================================
+
 function formatNumber(value, digits = 2) {
   const number = Number(value);
-  return Number.isFinite(number) ? number.toFixed(digits) : "0.00";
+
+  return Number.isFinite(number)
+    ? number.toLocaleString("id-ID", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      })
+    : "0,00";
 }
+
+// =====================================
+// FORMAT TANGGAL
+// =====================================
 
 function formatDate(date) {
   if (!date) return "-";
 
   const parsedDate = new Date(date);
 
-  if (Number.isNaN(parsedDate.getTime())) return "-";
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "-";
+  }
 
   return parsedDate.toLocaleString("id-ID", {
     dateStyle: "long",
@@ -23,14 +51,28 @@ function formatDate(date) {
   });
 }
 
+// =====================================
+// KOMPONEN UTAMA
+// =====================================
+
 export default function AssessmentStatistics() {
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchStatistics = useCallback(async () => {
+  // =====================================
+  // AMBIL DATA STATISTIK
+  // =====================================
+
+  const fetchStatistics = useCallback(async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
       setError("");
 
       const token = localStorage.getItem("startiva_token");
@@ -40,7 +82,7 @@ export default function AssessmentStatistics() {
       }
 
       const response = await fetch(
-        `${API_URL.replace(/\/$/, "")}/assessment-statistics/latest`,
+        `${API_URL.replace(/\/$/, "")}/konselor/assessment-statistics/latest`,
         {
           method: "GET",
           headers: {
@@ -60,11 +102,15 @@ export default function AssessmentStatistics() {
 
       setStatistics(result.data || null);
     } catch (err) {
+      console.error("Statistics error:", err);
+
       setError(
-        err.message || "Terjadi kesalahan saat mengambil data statistik."
+        err.message ||
+          "Terjadi kesalahan saat mengambil data statistik."
       );
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -72,59 +118,94 @@ export default function AssessmentStatistics() {
     fetchStatistics();
   }, [fetchStatistics]);
 
+  // =====================================
+  // DATA FREKUENSI
+  // =====================================
+
   const frequency = statistics?.frequency || {};
 
-  const maxFrequency = Math.max(
-    ...[1, 2, 3, 4].map((score) =>
+  const frequencyData = [1, 2, 3, 4].map((score) => ({
+    score,
+    count: Math.max(
+      0,
       Number(frequency[String(score)] || 0)
     ),
+    label: {
+      1: "Sangat Tidak Setuju",
+      2: "Tidak Setuju",
+      3: "Setuju",
+      4: "Sangat Setuju",
+    }[score],
+  }));
+
+  const maxFrequency = Math.max(
+    ...frequencyData.map((item) => item.count),
     1
   );
 
-  const cards = [
+  // =====================================
+  // KARTU RINGKASAN
+  // =====================================
+
+  const summaryCards = [
     {
-      label: "Total Assessment",
+      label: "Total Asesmen",
       value: statistics?.total_assessments ?? 0,
-      description: "Assessment yang telah dikerjakan",
-      icon: "01",
+      description: "Jumlah asesmen yang terkumpul",
+      icon: ClipboardList,
       style: "red",
     },
     {
       label: "Total Jawaban",
       value: statistics?.total_responses ?? 0,
       description: "Seluruh jawaban responden",
-      icon: "02",
+      icon: Users,
       style: "peach",
     },
     {
-      label: "Rata-rata Kesiapan",
-      value: `${formatNumber(statistics?.average_score_percentage)}%`,
-      description: "Persentase kesiapan bisnis",
-      icon: "%",
+      label: "Rata-rata Skor",
+      value: `${formatNumber(
+        statistics?.average_score_percentage,
+        2
+      )}%`,
+      description: "Persentase skor asesmen",
+      icon: Activity,
       style: "rose",
     },
     {
       label: "Mean",
       value: formatNumber(statistics?.mean),
-      description: "Rata-rata skor jawaban",
-      icon: "μ",
+      description: "Rata-rata seluruh skor jawaban",
+      icon: Calculator,
       style: "dark",
     },
   ];
+
+  // =====================================
+  // LOADING
+  // =====================================
 
   if (loading) {
     return (
       <div className="statistics-page">
         <div className="statistics-loading">
           <div className="statistics-loader" />
-          <h3>Memuat data statistik</h3>
-          <p>Mohon tunggu sebentar...</p>
+
+          <h3>Memuat Data Statistik</h3>
+
+          <p>
+            Sedang mengambil hasil pengolahan RICE Assessment...
+          </p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // =====================================
+  // ERROR
+  // =====================================
+
+  if (error && !statistics) {
     return (
       <div className="statistics-page">
         <div className="statistics-header">
@@ -132,23 +213,31 @@ export default function AssessmentStatistics() {
             <span className="statistics-eyebrow">
               STARTIVA ANALYTICS
             </span>
+
             <h1>Dashboard Statistik</h1>
+
             <p>
-              Ringkasan hasil pengolahan Business Assessment Startiva.
+              Pantau ringkasan hasil RICE Assessment mahasiswa.
             </p>
           </div>
         </div>
 
-        <div className="statistics-error">
-          <div className="statistics-error-icon">!</div>
+        <div className="statistics-message">
+          <div className="statistics-message-icon">
+            <AlertCircle size={23} />
+          </div>
+
           <div>
             <h3>Data belum dapat dimuat</h3>
+
             <p>{error}</p>
+
             <button
               type="button"
               className="statistics-refresh"
-              onClick={fetchStatistics}
+              onClick={() => fetchStatistics()}
             >
+              <RefreshCw size={15} />
               Coba Lagi
             </button>
           </div>
@@ -156,6 +245,10 @@ export default function AssessmentStatistics() {
       </div>
     );
   }
+
+  // =====================================
+  // BELUM ADA DATA
+  // =====================================
 
   if (!statistics) {
     return (
@@ -165,35 +258,53 @@ export default function AssessmentStatistics() {
             <span className="statistics-eyebrow">
               STARTIVA ANALYTICS
             </span>
+
             <h1>Dashboard Statistik</h1>
+
             <p>
-              Ringkasan hasil pengolahan Business Assessment Startiva.
+              Pantau ringkasan hasil RICE Assessment mahasiswa.
             </p>
           </div>
-        </div>
 
-        <div className="statistics-empty">
-          <div className="statistics-empty-icon">01</div>
-          <h3>Belum ada data statistik</h3>
-          <p>
-            Data statistik akan ditampilkan setelah hasil assessment
-            berhasil diproses.
-          </p>
           <button
             type="button"
             className="statistics-refresh"
-            onClick={fetchStatistics}
+            onClick={() => fetchStatistics(true)}
+            disabled={refreshing}
           >
+            <RefreshCw
+              size={15}
+              className={refreshing ? "refresh-spinning" : ""}
+            />
             Refresh Data
           </button>
+        </div>
+
+        <div className="statistics-empty">
+          <div className="statistics-empty-icon">
+            <ChartNoAxesColumn size={30} />
+          </div>
+
+          <h3>Belum Ada Data Statistik</h3>
+
+          <p>
+            Statistik akan ditampilkan setelah data RICE Assessment
+            berhasil diproses melalui workflow n8n.
+          </p>
         </div>
       </div>
     );
   }
 
+  // =====================================
+  // DASHBOARD STATISTIK
+  // =====================================
+
   return (
     <div className="statistics-page">
+
       {/* HEADER */}
+
       <header className="statistics-header">
         <div>
           <span className="statistics-eyebrow">
@@ -203,101 +314,142 @@ export default function AssessmentStatistics() {
           <h1>Dashboard Statistik</h1>
 
           <p>
-            Ringkasan hasil pengolahan Business Assessment Startiva.
-            Pantau data dan distribusi jawaban responden.
+            Ringkasan hasil pengolahan RICE Assessment mahasiswa.
+            Pantau distribusi jawaban dan perhitungan statistik.
           </p>
         </div>
 
         <button
           type="button"
           className="statistics-refresh"
-          onClick={fetchStatistics}
-          disabled={loading}
+          onClick={() => fetchStatistics(true)}
+          disabled={refreshing}
         >
-          <span className="refresh-icon">↻</span>
-          Refresh Data
+          <RefreshCw
+            size={15}
+            className={refreshing ? "refresh-spinning" : ""}
+          />
+
+          {refreshing ? "Memperbarui..." : "Refresh Data"}
         </button>
       </header>
 
-      {/* SUMMARY CARDS */}
-      <section className="statistics-grid">
-        {cards.map((card) => (
-          <article
-            className="statistics-card"
-            key={card.label}
-          >
-            <div className="statistics-card-top">
-              <span>{card.label}</span>
-              <div className={`statistics-card-icon ${card.style}`}>
-                {card.icon}
-              </div>
-            </div>
+      {/* PESAN ERROR SAAT REFRESH */}
 
-            <h2>{card.value}</h2>
-            <p>{card.description}</p>
-          </article>
-        ))}
+      {error && (
+        <div className="statistics-inline-error">
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* SUMMARY CARDS */}
+
+      <section className="statistics-grid">
+        {summaryCards.map((card) => {
+          const Icon = card.icon;
+
+          return (
+            <article
+              className="statistics-card"
+              key={card.label}
+            >
+              <div className="statistics-card-top">
+                <span>{card.label}</span>
+
+                <div className={`statistics-card-icon ${card.style}`}>
+                  <Icon size={19} />
+                </div>
+              </div>
+
+              <h2>{card.value}</h2>
+
+              <p>{card.description}</p>
+            </article>
+          );
+        })}
       </section>
 
-      {/* SECTION TITLE */}
-      <div className="statistics-section-heading">
+      {/* HEADING ANALISIS */}
+
+      <section className="statistics-section-heading">
         <div>
           <span className="statistics-eyebrow">
             DATA OVERVIEW
           </span>
+
           <h2>Analisis Hasil Assessment</h2>
+
           <p>
-            Visualisasi distribusi jawaban dan ringkasan perhitungan statistik.
+            Visualisasi distribusi jawaban dan ringkasan
+            perhitungan statistik responden.
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* CONTENT */}
+      {/* STATISTICS CONTENT */}
+
       <div className="statistics-content-grid">
-        {/* FREQUENCY CHART */}
+
+        {/* DISTRIBUSI FREKUENSI */}
+
         <section className="statistics-panel frequency-panel">
           <div className="statistics-panel-header">
             <div>
-              <span className="panel-kicker">RESPONSE DISTRIBUTION</span>
+              <span className="panel-kicker">
+                RESPONSE DISTRIBUTION
+              </span>
+
               <h3>Distribusi Jawaban</h3>
+
               <p>
                 Frekuensi jawaban berdasarkan skala penilaian 1–4.
               </p>
             </div>
 
-            <div className="panel-header-icon">▥</div>
+            <div className="panel-header-icon">
+              <BarChart3 size={20} />
+            </div>
           </div>
 
           <div className="frequency-chart">
-            {[1, 2, 3, 4].map((score) => {
-              const count = Number(frequency[String(score)] || 0);
-              const width = (count / maxFrequency) * 100;
+            {frequencyData.map((item) => {
+              const width =
+                (item.count / maxFrequency) * 100;
 
               return (
-                <div className="frequency-row" key={score}>
+                <div
+                  className="frequency-row"
+                  key={item.score}
+                >
                   <div className="frequency-label">
-                    <span className={`score-number score-${score}`}>
-                      {score}
+                    <span
+                      className={`score-number score-${item.score}`}
+                    >
+                      {item.score}
                     </span>
-                    <span>Skor {score}</span>
+
+                    <span>Skor {item.score}</span>
                   </div>
 
                   <div
                     className="frequency-track"
                     role="progressbar"
-                    aria-label={`Frekuensi skor ${score}`}
-                    aria-valuenow={count}
-                    aria-valuemin="0"
+                    aria-label={`Frekuensi ${item.label}`}
+                    aria-valuenow={item.count}
+                    aria-valuemin={0}
                     aria-valuemax={maxFrequency}
                   >
                     <div
-                      className={`frequency-bar bar-${score}`}
-                      style={{ width: `${width}%` }}
+                      className={`frequency-bar bar-${item.score}`}
+                      style={{
+                        width: `${width}%`,
+                      }}
                     />
                   </div>
 
                   <strong className="frequency-count">
-                    {count}
+                    {item.count.toLocaleString("id-ID")}
                   </strong>
                 </div>
               );
@@ -305,37 +457,39 @@ export default function AssessmentStatistics() {
           </div>
 
           <div className="frequency-legend">
-            <div>
-              <span className="legend-dot dot-1" />
-              <span>1 — Sangat Tidak Setuju</span>
-            </div>
-            <div>
-              <span className="legend-dot dot-2" />
-              <span>2 — Tidak Setuju</span>
-            </div>
-            <div>
-              <span className="legend-dot dot-3" />
-              <span>3 — Setuju</span>
-            </div>
-            <div>
-              <span className="legend-dot dot-4" />
-              <span>4 — Sangat Setuju</span>
-            </div>
+            {frequencyData.map((item) => (
+              <div key={item.score}>
+                <span
+                  className={`legend-dot dot-${item.score}`}
+                />
+
+                <span>
+                  {item.score} — {item.label}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* STATISTICAL ANALYSIS */}
+        {/* ANALISIS STATISTIK */}
+
         <section className="statistics-panel analysis-panel">
           <div className="statistics-panel-header">
             <div>
-              <span className="panel-kicker">STATISTICAL SUMMARY</span>
+              <span className="panel-kicker">
+                STATISTICAL SUMMARY
+              </span>
+
               <h3>Analisis Statistik</h3>
+
               <p>
-                Ringkasan perhitungan dari seluruh jawaban assessment.
+                Ringkasan perhitungan dari seluruh jawaban asesmen.
               </p>
             </div>
 
-            <div className="panel-header-icon">∑</div>
+            <div className="panel-header-icon">
+              <Calculator size={20} />
+            </div>
           </div>
 
           <div className="analysis-list">
@@ -344,6 +498,7 @@ export default function AssessmentStatistics() {
                 <strong>Mean</strong>
                 <small>Rata-rata skor jawaban</small>
               </div>
+
               <span>{formatNumber(statistics.mean)}</span>
             </div>
 
@@ -352,6 +507,7 @@ export default function AssessmentStatistics() {
                 <strong>Standar Deviasi</strong>
                 <small>Persebaran nilai jawaban</small>
               </div>
+
               <span>
                 {formatNumber(statistics.standard_deviation)}
               </span>
@@ -359,20 +515,26 @@ export default function AssessmentStatistics() {
 
             <div className="analysis-item">
               <div>
-                <strong>Rata-rata Kesiapan</strong>
-                <small>Persentase kesiapan bisnis</small>
+                <strong>Rata-rata Skor</strong>
+                <small>Persentase skor asesmen</small>
               </div>
+
               <span>
-                {formatNumber(statistics.average_score_percentage)}%
+                {formatNumber(
+                  statistics.average_score_percentage
+                )}%
               </span>
             </div>
 
             <div className="analysis-item">
               <div>
-                <strong>Total Assessment</strong>
-                <small>Jumlah assessment terkumpul</small>
+                <strong>Total Asesmen</strong>
+                <small>Jumlah asesmen terkumpul</small>
               </div>
-              <span>{statistics.total_assessments ?? 0}</span>
+
+              <span>
+                {statistics.total_assessments ?? 0}
+              </span>
             </div>
 
             <div className="analysis-item">
@@ -380,22 +542,31 @@ export default function AssessmentStatistics() {
                 <strong>Total Jawaban</strong>
                 <small>Jumlah seluruh jawaban</small>
               </div>
-              <span>{statistics.total_responses ?? 0}</span>
+
+              <span>
+                {statistics.total_responses ?? 0}
+              </span>
             </div>
           </div>
         </section>
       </div>
 
       {/* FOOTER */}
+
       <footer className="statistics-footer">
         <div className="statistics-footer-status">
-          <span className="status-dot" />
+          <span className="statistics-status-dot" />
           Data statistik tersimpan
         </div>
 
-        <span>
-          Terakhir diperbarui: {formatDate(statistics.calculated_at)}
-        </span>
+        <div className="statistics-footer-date">
+          <CalendarDays size={14} />
+
+          <span>
+            Terakhir diperbarui:{" "}
+            {formatDate(statistics.calculated_at)}
+          </span>
+        </div>
       </footer>
     </div>
   );
