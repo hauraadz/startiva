@@ -12,11 +12,8 @@ import {
 } from "lucide-react";
 import "./AuthModal.css";
 
-// URL API diatur melalui Environment Variables Vite.
-// Contoh: https://backend-production.up.railway.app/api
-const API_URL = (
-  import.meta.env.VITE_API_URL || ""
-).replace(/\/+$/, "");
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 function AuthModal({ mode = "login", onClose, onSuccess }) {
   const [formMode, setFormMode] = useState(mode);
@@ -60,13 +57,6 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
     setError("");
     setFieldErrors({});
 
-    if (!API_URL) {
-      setError(
-        "URL Backend belum dikonfigurasi. Silakan atur VITE_API_URL di Railway."
-      );
-      return;
-    }
-
     if (isRegister && password !== passwordConfirmation) {
       setError("Konfirmasi password tidak sama.");
       return;
@@ -81,7 +71,6 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
 
     try {
       let endpoint = "/login";
-
       let payload = {
         email: email.trim(),
         password,
@@ -108,7 +97,6 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
         `${API_URL}${endpoint}`,
         payload,
         {
-          timeout: 20000,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -116,23 +104,16 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
         }
       );
 
-      const { token, user } = response.data || {};
+      const { token, user } = response.data;
 
       if (!token || !user) {
-        throw new Error(
-          "Respons autentikasi server tidak lengkap. Periksa format respons API Laravel."
-        );
+        throw new Error("Respons autentikasi dari server tidak lengkap.");
       }
 
       localStorage.setItem("startiva_token", token);
-      localStorage.setItem(
-        "startiva_user",
-        JSON.stringify(user)
-      );
+      localStorage.setItem("startiva_user", JSON.stringify(user));
 
-      if (typeof onSuccess === "function") {
-        onSuccess(user, token);
-      }
+      onSuccess(user, token);
     } catch (err) {
       const responseData = err.response?.data;
 
@@ -146,23 +127,11 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
             ? firstError[0]
             : String(firstError)
         );
-      } else if (err.response) {
-        setError(
-          responseData?.message ||
-          `Server memberikan respons error (${err.response.status}).`
-        );
-      } else if (err.code === "ECONNABORTED") {
-        setError(
-          "Koneksi ke server terlalu lama. Silakan coba lagi."
-        );
-      } else if (err.message === "Network Error") {
-        setError(
-          "Tidak dapat menghubungi Backend. Periksa URL API, CORS Laravel, dan status server Railway."
-        );
       } else {
         setError(
-          err.message ||
-          "Terjadi kesalahan. Silakan coba lagi."
+          responseData?.message ||
+            err.message ||
+            "Tidak dapat terhubung ke server. Silakan coba lagi."
         );
       }
     } finally {
@@ -342,9 +311,7 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
                 className="auth-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={
-                  showPassword
-                    ? "Sembunyikan password"
-                    : "Tampilkan password"
+                  showPassword ? "Sembunyikan password" : "Tampilkan password"
                 }
               >
                 {showPassword
@@ -420,7 +387,6 @@ function AuthModal({ mode = "login", onClose, onSuccess }) {
                   autoComplete="off"
                   required
                 />
-
                 <ShieldCheck size={18} />
               </div>
 
