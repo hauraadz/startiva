@@ -6,15 +6,14 @@ return [
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
-        'register',
-        'login',
-        'logout',
-        'test',
     ],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'https://startiva-eight.vercel.app',
+
+        // Domain frontend Railway lama, jika masih digunakan
         'https://sparkling-energy-production-6a0e15ff.up.railway.app',
     ],
 
@@ -26,6 +25,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];
