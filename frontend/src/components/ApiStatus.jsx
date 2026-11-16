@@ -2,21 +2,52 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_URL = (
+  import.meta.env.VITE_API_URL ||
+  "https://startiva-production.up.railway.app/api"
+).replace(/\/+$/, "");
+
 function ApiStatus() {
   const [status, setStatus] = useState("Memeriksa koneksi...");
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
+    console.log("API STATUS URL:", `${API_URL}/test`);
+
     axios
-      .get(`${import.meta.env.VITE_API_URL}/test`)
+      .get(`${API_URL}/test`, {
+        timeout: 15000,
+        headers: {
+          Accept: "application/json",
+        },
+      })
       .then((response) => {
-        setStatus(response.data.message);
+        if (!isMounted) return;
+
+        setStatus(
+          response.data?.message || "Backend berhasil terhubung."
+        );
         setConnected(true);
       })
-      .catch(() => {
-        setStatus("Belum terhubung ke server Laravel.");
+      .catch((error) => {
+        if (!isMounted) return;
+
+        console.error("API STATUS ERROR:", error);
+
+        setStatus(
+          error.response
+            ? `Server merespons dengan status ${error.response.status}.`
+            : "Tidak dapat menghubungi server Laravel Railway."
+        );
+
         setConnected(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -34,6 +65,7 @@ function ApiStatus() {
       <strong>
         {connected ? "Backend Connected" : "Backend Status"}
       </strong>
+
       <p>{status}</p>
     </div>
   );

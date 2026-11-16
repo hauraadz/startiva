@@ -15,7 +15,8 @@ import "./AuthModal.css";
 // URL API diatur melalui Environment Variables Vite.
 // Contoh: https://backend-production.up.railway.app/api
 const API_URL = (
-  import.meta.env.VITE_API_URL || ""
+  import.meta.env.VITE_API_URL ||
+  "https://startiva-production.up.railway.app/api"
 ).replace(/\/+$/, "");
 
 function AuthModal({ mode = "login", onClose, onSuccess }) {
