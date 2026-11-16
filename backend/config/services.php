@@ -1,3 +1,4 @@
+
 <?php
 
 return [
@@ -48,7 +49,11 @@ return [
             'STARTIVA_COUNSELOR_REGISTRATION_CODE'
         ),
 
+        // Secret untuk autentikasi request dari n8n ke Laravel
         'n8n_secret' => env('N8N_API_SECRET'),
+
+        // URL Production Webhook n8n untuk menerima assessment
+        'assessment_webhook' => env('N8N_ASSESSMENT_WEBHOOK'),
     ],
 
 ];
