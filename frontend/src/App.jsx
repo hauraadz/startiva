@@ -294,9 +294,6 @@ function App() {
 
             <div className="hero-trust">
               <div className="trust-avatars">
-                <span>♡</span>
-                <span>✿</span>
-                <span>✦</span>
               </div>
               <div>
                 <strong>A space to be yourself.</strong>
@@ -325,7 +322,6 @@ function App() {
             </div>
 
             <div className="floating-note note-top">
-              <span className="note-icon">♡</span>
               <div>
                 <strong>You are heard.</strong>
                 <small>Your feelings matter.</small>
@@ -333,7 +329,6 @@ function App() {
             </div>
 
             <div className="floating-note note-bottom">
-              <span className="note-icon green-icon">✳</span>
               <div>
                 <strong>One step at a time</strong>
                 <small>It's okay to ask for help.</small>
@@ -377,7 +372,6 @@ function App() {
               loading="lazy"
             />
             <div className="about-image-tag">
-              <span>✿</span>
               A place to pause
             </div>
             <div className="about-image-number">01 / 04</div>
@@ -599,7 +593,7 @@ function App() {
                   kebutuhan dirimu.
                 </p>
               </div>
-              <span className="workflow-symbol">♡</span>
+              <span className="workflow-symbol">↗</span>
             </article>
 
             <article className="workflow-step">
@@ -611,7 +605,7 @@ function App() {
                   bisa kamu ambil.
                 </p>
               </div>
-              <span className="workflow-symbol">✳</span>
+              <span className="workflow-symbol">↗</span>
             </article>
 
             <article className="workflow-step">
@@ -623,7 +617,7 @@ function App() {
                   refleksi bersama AI Companion.
                 </p>
               </div>
-              <span className="workflow-symbol">✦</span>
+              <span className="workflow-symbol">↗</span>
             </article>
           </div>
         </section>
