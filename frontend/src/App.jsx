@@ -15,7 +15,7 @@ import AIChat from "./pages/AIChat";
 import StudentProfile from "./pages/StudentProfile";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+  import.meta.env.VITE_API_URL || "https://startiva-production.up.railway.app/api";
 
 function App() {
   const [authMode, setAuthMode] = useState(null);
