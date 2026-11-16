@@ -27,13 +27,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Hermes AI
+    | Hermes AI Gateway
     |--------------------------------------------------------------------------
     */
 
     'hermes' => [
-        'url' => env('HERMES_API_URL', 'http://127.0.0.1:8642'),
+        'url' => env('HERMES_API_URL'),
         'key' => env('HERMES_API_KEY'),
+        'model' => env('HERMES_MODEL', 'hermes-agent'),
+        'timeout' => env('HERMES_TIMEOUT', 120),
     ],
 
     /*
