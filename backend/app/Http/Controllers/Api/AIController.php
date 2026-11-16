@@ -47,14 +47,27 @@ class AIController extends Controller
         }
 
         // =============================================
-        // 3. KONFIGURASI HERMES
+        // 3. KONFIGURASI HERMES GATEWAY
         // =============================================
 
-        $apiUrl = config('services.hermes.url');
-        $apiKey = config('services.hermes.key');
+        $apiUrl = trim((string) config('services.hermes.url'));
+        $apiKey = trim((string) config('services.hermes.key'));
+
+        $model = config(
+            'services.hermes.model',
+            'hermes-agent'
+        );
+
+        $timeout = (int) config(
+            'services.hermes.timeout',
+            120
+        );
 
         if (empty($apiUrl) || empty($apiKey)) {
-            Log::error('STARTIVA AI: Konfigurasi Hermes tidak tersedia.');
+            Log::error('STARTIVA AI: Konfigurasi Hermes tidak tersedia.', [
+                'has_url' => !empty($apiUrl),
+                'has_key' => !empty($apiKey),
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -62,15 +75,45 @@ class AIController extends Controller
             ], 500);
         }
 
+        if (!filter_var($apiUrl, FILTER_VALIDATE_URL)) {
+            Log::error('STARTIVA AI: Format URL Hermes tidak valid.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'URL Hermes Gateway tidak valid.',
+            ], 500);
+        }
+
+        if (empty($model)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Model Hermes belum dikonfigurasi.',
+            ], 500);
+        }
+
+        $endpoint = rtrim($apiUrl, '/') . '/v1/chat/completions';
+
         // =============================================
-        // 4. MENGAMBIL STUDENT WELL-BEING ASSESSMENT
+        // 4. MENGAMBIL ASSESSMENT TERBARU
         // =============================================
 
-        $latestAssessment = BusinessAssessment::query()
-            ->where('user_id', $user->id)
-            ->whereNotNull('aspect_scores')
-            ->latest()
-            ->first();
+        try {
+            $latestAssessment = BusinessAssessment::query()
+                ->where('user_id', $user->id)
+                ->whereNotNull('aspect_scores')
+                ->latest()
+                ->first();
+
+        } catch (\Throwable $e) {
+            Log::error('STARTIVA AI: Gagal mengambil assessment.', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Data assessment belum dapat diakses.',
+            ], 500);
+        }
 
         // =============================================
         // 5. MENYUSUN KONTEKS ASSESSMENT
@@ -243,19 +286,18 @@ PROMPT;
         try {
             Log::info('STARTIVA AI: Menghubungi Hermes Gateway.', [
                 'has_assessment' => $latestAssessment !== null,
+                'model' => $model,
+                'endpoint' => $endpoint,
             ]);
 
             $response = Http::acceptJson()
                 ->withToken($apiKey)
-                ->timeout(120)
-                ->post(
-                    rtrim($apiUrl, '/') . '/v1/chat/completions',
-                    [
-                        'model' => 'hermes-agent',
-                        'messages' => $messages,
-                        'stream' => false,
-                    ]
-                );
+                ->timeout($timeout)
+                ->post($endpoint, [
+                    'model' => $model,
+                    'messages' => $messages,
+                    'stream' => false,
+                ]);
 
             // =============================================
             // 9. MENANGANI HTTP ERROR
@@ -264,7 +306,7 @@ PROMPT;
             if (!$response->successful()) {
                 Log::error('STARTIVA AI: Hermes HTTP Error.', [
                     'status' => $response->status(),
-                    'response' => $response->body(),
+                    'response' => substr($response->body(), 0, 3000),
                 ]);
 
                 return response()->json([
@@ -274,17 +316,27 @@ PROMPT;
                 ], 502);
             }
 
+            // =============================================
+            // 10. MEMBACA RESPONSE HERMES
+            // =============================================
+
             $result = $response->json();
 
-            // =============================================
-            // 10. MENGAMBIL JAWABAN HERMES
-            // =============================================
+            if (!is_array($result)) {
+                Log::error('STARTIVA AI: Format respons Hermes tidak valid.');
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format respons AI tidak valid.',
+                ], 502);
+            }
 
             $answer = data_get(
                 $result,
                 'choices.0.message.content'
             );
 
+            // Mendukung content dalam bentuk array.
             if (is_array($answer)) {
                 $answer = collect($answer)
                     ->map(function ($item) {
@@ -301,14 +353,16 @@ PROMPT;
             }
 
             // =============================================
-            // 11. VALIDASI JAWABAN
+            // 11. VALIDASI JAWABAN AI
             // =============================================
 
             if (
                 !is_string($answer) ||
                 trim($answer) === ''
             ) {
-                Log::error('STARTIVA AI: Respons Hermes kosong.');
+                Log::error('STARTIVA AI: Respons Hermes kosong.', [
+                    'response_keys' => array_keys($result),
+                ]);
 
                 return response()->json([
                     'success' => false,
@@ -329,7 +383,7 @@ PROMPT;
                 'has_assessment' => $latestAssessment !== null,
             ], 200);
 
-        } catch (\Throwable $e) {
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
             Log::error('STARTIVA AI: Koneksi Hermes gagal.', [
                 'error' => $e->getMessage(),
             ]);
@@ -338,6 +392,18 @@ PROMPT;
                 'success' => false,
                 'message' => 'Tidak dapat terhubung ke Hermes Gateway.',
             ], 502);
+
+        } catch (\Throwable $e) {
+            Log::error('STARTIVA AI: Terjadi kesalahan.', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memproses pesan AI.',
+            ], 500);
         }
     }
 }
