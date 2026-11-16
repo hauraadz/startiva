@@ -13,8 +13,11 @@ import {
   ShieldCheck,
   Compass,
   BookOpenCheck,
+  Menu,
+  X,
 } from "lucide-react";
 
+import { useState } from "react";
 import "./StudentDashboard.css";
 
 function StudentDashboard({
@@ -27,8 +30,11 @@ function StudentDashboard({
   onOpenStatistics,
   onOpenAI,
 }) {
-  const firstName = user?.name?.split(" ")[0] || "Mahasiswa";
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const firstName = user?.name?.trim()?.split(" ")[0] || "Mahasiswa";
   const fullName = user?.name || "Mahasiswa";
+  const initial = firstName.charAt(0).toUpperCase();
 
   const navigation = [
     {
@@ -64,64 +70,6 @@ function StudentDashboard({
     },
   ];
 
-  const features = [
-    {
-      number: "01",
-      icon: ClipboardCheck,
-      category: "KENALI DIRI",
-      title: "RICE Assessment",
-      description:
-        "Isi assessment untuk mengenali kondisi dan kebutuhan dukunganmu. Jawab setiap pertanyaan dengan jujur dan nyaman.",
-      actionLabel: "Mulai assessment",
-      action: onOpenAssessment,
-      className: "assessment-feature",
-    },
-    {
-      number: "02",
-      icon: History,
-      category: "PERJALANANMU",
-      title: "Riwayat Assessment",
-      description:
-        "Lihat kembali hasil assessment yang pernah kamu isi dan pantau perjalananmu dari waktu ke waktu.",
-      actionLabel: "Lihat riwayat",
-      action: onOpenHistory,
-      className: "history-feature",
-    },
-    {
-      number: "03",
-      icon: MessageCircleHeart,
-      category: "DUKUNGAN SESAMA",
-      title: "Konsultasi Konselor",
-      description:
-        "Ajukan sesi konsultasi dengan konselor sebaya untuk berbagi cerita dan mendapatkan dukungan.",
-      actionLabel: "Ajukan konsultasi",
-      action: onOpenConsultation,
-      className: "consultation-feature",
-    },
-    {
-      number: "04",
-      icon: Sparkles,
-      category: "AI COMPANION",
-      title: "Hermes AI",
-      description:
-        "Punya sesuatu yang ingin diceritakan? Mulai percakapan dengan teman AI yang siap mendengarkan.",
-      actionLabel: "Mulai bercerita",
-      action: onOpenAI,
-      className: "ai-feature",
-    },
-    {
-      number: "05",
-      icon: UserRound,
-      category: "AKUNMU",
-      title: "Profil Saya",
-      description:
-        "Periksa dan kelola informasi akunmu agar pengalaman menggunakan Startiva tetap nyaman.",
-      actionLabel: "Lihat profil",
-      action: onOpenProfile,
-      className: "profile-feature",
-    },
-  ];
-
   const journeySteps = [
     {
       number: "01",
@@ -146,145 +94,240 @@ function StudentDashboard({
       icon: Heart,
       title: "Temukan dukungan",
       description:
-        "Jika membutuhkan teman berbagi, kamu dapat mengajukan konsultasi dengan konselor sebaya.",
+        "Kamu bisa mengajukan konsultasi dengan konselor sebaya saat membutuhkan teman berbagi.",
       button: "Cari dukungan",
       action: onOpenConsultation,
     },
   ];
 
+  const features = [
+    {
+      number: "01",
+      icon: ClipboardCheck,
+      category: "KENALI DIRI",
+      title: "RICE Assessment",
+      description:
+        "Kenali kondisi dan kebutuhan dukunganmu melalui serangkaian pertanyaan reflektif.",
+      actionLabel: "Mulai assessment",
+      action: onOpenAssessment,
+      className: "assessment-feature",
+    },
+    {
+      number: "02",
+      icon: History,
+      category: "PERJALANANMU",
+      title: "Riwayat Assessment",
+      description:
+        "Lihat kembali hasil assessment yang pernah kamu isi dan perjalananmu dari waktu ke waktu.",
+      actionLabel: "Lihat riwayat",
+      action: onOpenHistory,
+      className: "history-feature",
+    },
+    {
+      number: "03",
+      icon: MessageCircleHeart,
+      category: "DUKUNGAN SESAMA",
+      title: "Konsultasi Konselor",
+      description:
+        "Berbagi cerita dan ajukan sesi konsultasi bersama konselor sebaya.",
+      actionLabel: "Ajukan konsultasi",
+      action: onOpenConsultation,
+      className: "consultation-feature",
+    },
+    {
+      number: "04",
+      icon: Sparkles,
+      category: "AI COMPANION",
+      title: "Hermes AI",
+      description:
+        "Mulai percakapan dengan teman AI ketika kamu membutuhkan ruang untuk bercerita.",
+      actionLabel: "Mulai bercerita",
+      action: onOpenAI,
+      className: "ai-feature",
+    },
+    {
+      number: "05",
+      icon: UserRound,
+      category: "AKUNMU",
+      title: "Profil Saya",
+      description:
+        "Periksa dan kelola informasi akunmu agar pengalaman menggunakan Startiva tetap nyaman.",
+      actionLabel: "Lihat profil",
+      action: onOpenProfile,
+      className: "profile-feature",
+    },
+  ];
+
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <div className="dashboard">
+      {/* MOBILE OVERLAY */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-overlay"
+          aria-label="Tutup menu"
+          onClick={closeSidebar}
+        />
+      )}
 
       {/* SIDEBAR */}
-      <aside className="dashboard-sidebar">
+      <aside
+        className={`dashboard-sidebar ${
+          sidebarOpen ? "sidebar-open" : ""
+        }`}
+      >
+        <div className="sidebar-top">
+          <div className="sidebar-brand">
+            <a href="#dashboard" className="dashboard-logo">
+              startiva<span>.</span>
+            </a>
 
-        <div className="sidebar-brand">
-          <a href="#dashboard" className="dashboard-logo">
-            startiva<span>.</span>
-          </a>
-          <span className="brand-caption">
-            PEER SUPPORT PLATFORM
-          </span>
-        </div>
+            <span className="brand-caption">
+              PEER SUPPORT PLATFORM
+            </span>
 
-        <div className="sidebar-label">MENU UTAMA</div>
-
-        <nav className="sidebar-menu" aria-label="Navigasi utama">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.label}
-                type="button"
-                className={`sidebar-link ${item.active ? "active" : ""}`}
-                onClick={item.action || undefined}
-                aria-current={item.active ? "page" : undefined}
-              >
-                <span className="sidebar-link-icon">
-                  <Icon size={18} strokeWidth={1.8} />
-                </span>
-
-                <span>{item.label}</span>
-
-                {item.active && (
-                  <span className="active-indicator" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* AI HELP CARD */}
-        <div className="sidebar-help">
-          <div className="sidebar-help-icon">
-            <Sparkles size={17} strokeWidth={1.8} />
+            <button
+              type="button"
+              className="sidebar-close"
+              onClick={closeSidebar}
+              aria-label="Tutup navigasi"
+            >
+              <X size={20} />
+            </button>
           </div>
 
-          <strong>Butuh teman cerita?</strong>
+          <div className="sidebar-label">MENU UTAMA</div>
 
-          <p>
-            Kamu bisa mulai bercerita dengan Hermes AI kapan pun
-            kamu membutuhkan ruang untuk berbagi.
-          </p>
+          <nav className="sidebar-menu" aria-label="Navigasi utama">
+            {navigation.map((item) => {
+              const Icon = item.icon;
 
-          <button type="button" onClick={onOpenAI}>
-            Chat Hermes AI
-            <ArrowUpRight size={13} />
-          </button>
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  className={`sidebar-link ${
+                    item.active ? "active" : ""
+                  }`}
+                  onClick={() => {
+                    if (item.action) item.action();
+                    closeSidebar();
+                  }}
+                  aria-current={item.active ? "page" : undefined}
+                >
+                  <Icon size={18} strokeWidth={1.8} />
+                  <span>{item.label}</span>
+                  {item.active && (
+                    <span className="active-indicator" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="sidebar-help">
+            <div className="sidebar-help-icon">
+              <Sparkles size={17} />
+            </div>
+
+            <span className="help-eyebrow">RUANG CERITA</span>
+            <h3>Butuh teman cerita?</h3>
+
+            <p>
+              Hermes AI siap menemanimu ketika kamu membutuhkan ruang
+              untuk berbagi.
+            </p>
+
+            <button type="button" onClick={onOpenAI}>
+              Chat Hermes AI
+              <ArrowUpRight size={15} />
+            </button>
+          </div>
         </div>
 
-        {/* USER ACCOUNT */}
+        {/* ACCOUNT */}
         <div className="sidebar-bottom">
-
-          <div className="sidebar-user">
-            <div className="user-avatar">
-              {firstName.charAt(0).toUpperCase()}
-            </div>
+          <button
+            type="button"
+            className="sidebar-user"
+            onClick={onOpenProfile}
+          >
+            <div className="user-avatar">{initial}</div>
 
             <div className="user-info">
               <strong title={fullName}>{fullName}</strong>
               <small>Mahasiswa</small>
             </div>
-          </div>
+
+            <ArrowUpRight
+              size={15}
+              className="user-profile-arrow"
+            />
+          </button>
 
           <button
             type="button"
             className="sidebar-logout"
             onClick={onLogout}
           >
-            <LogOut size={16} strokeWidth={1.8} />
-            Keluar
+            <LogOut size={16} />
+            Keluar dari akun
           </button>
-
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <main className="dashboard-main" id="dashboard">
-
         {/* HEADER */}
         <header className="dashboard-header">
+          <div className="header-left">
+            <button
+              type="button"
+              className="mobile-menu-button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Buka navigasi"
+            >
+              <Menu size={21} />
+            </button>
 
-          <div className="header-heading">
-            <span className="dashboard-breadcrumb">
-              STARTIVA <span>/</span> DASHBOARD
-            </span>
-
-            <h1>Dashboard</h1>
-
-            <p>
-              Ruang aman untuk mengenali diri dan menemukan dukungan.
-            </p>
+            <div>
+              <div className="dashboard-breadcrumb">
+                STARTIVA <span>/</span> DASHBOARD
+              </div>
+              <h1>Dashboard</h1>
+            </div>
           </div>
 
-          <div className="header-profile">
-
+          <button
+            type="button"
+            className="header-profile"
+            onClick={onOpenProfile}
+          >
             <div className="header-user-info">
               <strong>{fullName}</strong>
               <small>Mahasiswa</small>
             </div>
 
             <div className="user-avatar header-avatar">
-              {firstName.charAt(0).toUpperCase()}
+              {initial}
             </div>
-
-          </div>
+          </button>
         </header>
 
-        {/* WELCOME HERO */}
+        {/* WELCOME */}
         <section className="welcome-banner">
-
           <div className="welcome-content">
-
             <span className="welcome-label">
-              YOU ARE NOT ALONE
+              <span className="welcome-label-dot" />
+              A LITTLE SPACE FOR YOU
             </span>
 
             <h2>
               Halo, {firstName}.
               <br />
-              Your feelings matter.
+              Senang kamu ada di sini.
             </h2>
 
             <p>
@@ -294,14 +337,13 @@ function StudentDashboard({
             </p>
 
             <div className="welcome-actions">
-
               <button
                 type="button"
                 className="welcome-primary-button"
                 onClick={onOpenAssessment}
               >
                 Mulai RICE Assessment
-                <ArrowUpRight size={15} />
+                <ArrowUpRight size={16} />
               </button>
 
               <button
@@ -310,123 +352,99 @@ function StudentDashboard({
                 onClick={onOpenConsultation}
               >
                 Temukan dukungan
+                <ArrowRight size={15} />
               </button>
-
             </div>
           </div>
 
-          {/* HERO DECORATION */}
-          <div className="hero-art" aria-hidden="true">
-
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
-            <div className="hero-orbit orbit-three" />
-
-            <div className="hero-center">
-              <Heart size={24} strokeWidth={1.5} />
-              <small>STARTIVA</small>
-            </div>
-
-            <span className="hero-spark spark-one">
-              ✧
-            </span>
-
-            <span className="hero-spark spark-two">
-              ✦
-            </span>
-
-            <span className="hero-spark spark-three">
-              ✧
-            </span>
-
-            <span className="hero-dot dot-one" />
-            <span className="hero-dot dot-two" />
-
+          {/* PNG IMAGE */}
+          <div className="welcome-art" aria-hidden="true">
+            <img
+              src="/images/startiva-illustration.png"
+              alt=""
+              className="welcome-image"
+            />
           </div>
-
-          <div className="hero-index">
-            STARTIVA / 001
-          </div>
-
         </section>
 
-        {/* JOURNEY SECTION */}
-        <section className="dashboard-section journey-section">
+        {/* INTRO */}
+        <section className="dashboard-intro">
+          <div>
+            <span className="section-eyebrow">
+              A GENTLE BEGINNING
+            </span>
 
-          <div className="section-heading">
-            <div>
-              <span className="section-eyebrow">
-                YOUR JOURNEY
-              </span>
+            <h2>Perjalananmu dimulai dari sini.</h2>
 
-              <h2>Mulai dari langkah kecil</h2>
-
-              <p>
-                Tidak perlu terburu-buru. Jalani setiap proses sesuai
-                kenyamananmu.
-              </p>
-            </div>
+            <p>
+              Tidak perlu terburu-buru. Ambil satu langkah kecil yang
+              terasa nyaman untukmu hari ini.
+            </p>
           </div>
 
-          <div className="journey-grid">
+          <div className="intro-decoration">
+            <span>01</span>
+            <div />
+            <span>03</span>
+          </div>
+        </section>
 
+        {/* JOURNEY */}
+        <section className="journey-section">
+          <div className="journey-grid">
             {journeySteps.map((step) => {
               const Icon = step.icon;
 
               return (
-                <article className="journey-step" key={step.number}>
-
+                <article
+                  className="journey-step"
+                  key={step.number}
+                >
                   <div className="journey-step-top">
-
-                    <span className="journey-step-icon">
+                    <span className="journey-number">
                       {step.number}
                     </span>
 
-                    <span className="journey-step-symbol">
-                      <Icon size={21} strokeWidth={1.7} />
-                    </span>
-
+                    <div className="journey-icon">
+                      <Icon size={21} strokeWidth={1.6} />
+                    </div>
                   </div>
 
                   <h3>{step.title}</h3>
-
                   <p>{step.description}</p>
 
                   <button
                     type="button"
                     onClick={step.action}
+                    disabled={!step.action}
                   >
                     {step.button}
-                    <ArrowRight size={14} />
+                    <ArrowRight size={15} />
                   </button>
-
                 </article>
               );
             })}
-
           </div>
         </section>
 
-        {/* FEATURE SECTION */}
-        <section className="dashboard-section explore-section">
-
-          <div className="section-heading feature-heading">
+        {/* FEATURES */}
+        <section className="explore-section">
+          <div className="section-heading">
             <div>
               <span className="section-eyebrow">
                 EXPLORE STARTIVA
               </span>
 
-              <h2>Ruang dukunganmu</h2>
+              <h2>Temukan ruang yang kamu butuhkan.</h2>
 
               <p>
-                Temukan fitur yang dapat membantumu dalam perjalanan
-                mengenali diri dan mencari dukungan.
+                Berbagai fitur untuk membantumu memahami diri dan
+                mendapatkan dukungan.
               </p>
             </div>
           </div>
 
-          <div className="dashboard-feature-grid">
-
+          <div className="dashboard-feature-list">
             {features.map((feature) => {
               const Icon = feature.icon;
 
@@ -435,54 +453,48 @@ function StudentDashboard({
                   className={`dashboard-feature-card ${feature.className}`}
                   key={feature.number}
                 >
-
-                  <div className="feature-card-top">
-
-                    <div className="feature-icon">
-                      <Icon size={21} strokeWidth={1.7} />
-                    </div>
-
-                    <span className="feature-number">
-                      {feature.number}
-                    </span>
-
+                  <div className="feature-number">
+                    {feature.number}
                   </div>
 
-                  <span className="feature-category">
-                    {feature.category}
-                  </span>
+                  <div className="feature-icon">
+                    <Icon size={22} strokeWidth={1.6} />
+                  </div>
 
-                  <h3>{feature.title}</h3>
+                  <div className="feature-main">
+                    <span className="feature-category">
+                      {feature.category}
+                    </span>
 
-                  <p>{feature.description}</p>
+                    <h3>{feature.title}</h3>
+                    <p>{feature.description}</p>
+                  </div>
 
                   <button
                     type="button"
                     className="dashboard-feature-button"
                     onClick={feature.action}
+                    disabled={!feature.action}
+                    aria-label={feature.actionLabel}
                   >
-                    {feature.actionLabel}
-                    <ArrowUpRight size={15} />
+                    <span>{feature.actionLabel}</span>
+                    <ArrowUpRight size={17} />
                   </button>
-
                 </article>
               );
             })}
-
           </div>
         </section>
 
-        {/* SUPPORT MESSAGE */}
+        {/* REMINDER */}
         <section className="dashboard-bottom-card">
-
           <div className="bottom-message-icon">
-            <ShieldCheck size={22} strokeWidth={1.7} />
+            <ShieldCheck size={25} strokeWidth={1.5} />
           </div>
 
           <div className="bottom-message-content">
-
             <span className="section-eyebrow">
-              A GENTLE REMINDER
+              A NOTE FOR YOU
             </span>
 
             <h2>
@@ -494,13 +506,15 @@ function StudentDashboard({
               bantuan. Mengenali perasaan dan mencari dukungan juga
               merupakan bentuk keberanian.
             </p>
+          </div>
 
+          <div className="bottom-heart" aria-hidden="true">
+            <Heart size={42} strokeWidth={1} />
           </div>
         </section>
 
         {/* FOOTER */}
         <footer className="dashboard-footer">
-
           <a href="#dashboard" className="footer-logo">
             startiva<span>.</span>
           </a>
@@ -509,8 +523,8 @@ function StudentDashboard({
             A safe space to understand yourself. © 2026 Startiva.
           </small>
 
+          <span className="footer-note">MADE WITH CARE</span>
         </footer>
-
       </main>
     </div>
   );
