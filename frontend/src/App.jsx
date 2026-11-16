@@ -127,11 +127,6 @@ function App() {
 
     return (
       <div className="app authenticated-app">
-
-        {/* =====================================
-            NAVIGASI KEMBALI
-        ===================================== */}
-
         {currentPage !== "dashboard" && (
           <div className="page-navigation">
             <button
@@ -146,11 +141,6 @@ function App() {
         )}
 
         <main className="authenticated-content">
-
-          {/* =====================================
-              DASHBOARD MAHASISWA
-          ===================================== */}
-
           {currentPage === "dashboard" && isMahasiswa && (
             <StudentDashboard
               user={currentUser}
@@ -163,10 +153,6 @@ function App() {
             />
           )}
 
-          {/* =====================================
-              DASHBOARD KONSELOR
-          ===================================== */}
-
           {currentPage === "dashboard" && isKonselor && (
             <CounselorDashboard
               user={currentUser}
@@ -176,49 +162,28 @@ function App() {
             />
           )}
 
-          {/* =====================================
-              PROFIL MAHASISWA
-          ===================================== */}
-
           {currentPage === "business-profile" && isMahasiswa && (
             <StudentProfile user={currentUser} />
           )}
-
-          {/* =====================================
-              RICE ASSESSMENT MAHASISWA
-          ===================================== */}
 
           {currentPage === "business-assessment" && isMahasiswa && (
             <BusinessAssessment />
           )}
 
-          {/* =====================================
-              RIWAYAT ASSESSMENT MAHASISWA
-          ===================================== */}
-
           {currentPage === "assessment-history" && isMahasiswa && (
             <AssessmentHistory />
           )}
-
-          {/* =====================================
-              KONSULTASI MAHASISWA
-          ===================================== */}
 
           {currentPage === "consultation" && isMahasiswa && (
             <Consultation />
           )}
 
-          {/* =====================================
-              PENGELOLAAN KONSULTASI KONSELOR
-          ===================================== */}
-
           {currentPage === "consultation" && isKonselor && (
             <div className="page-placeholder">
               <h2>Pengajuan Konsultasi</h2>
-
               <p>
-                Kamu dapat melihat dan mengelola pengajuan
-                konsultasi melalui Dashboard Konselor.
+                Kamu dapat melihat dan mengelola pengajuan konsultasi
+                melalui Dashboard Konselor.
               </p>
 
               <button
@@ -230,34 +195,21 @@ function App() {
               </button>
             </div>
           )}
-
-          {/* =====================================
-              STATISTIK ASSESSMENT KONSELOR
-          ===================================== */}
 
           {currentPage === "assessment-statistics" && isKonselor && (
             <AssessmentStatistics />
           )}
 
-          {/* =====================================
-              AI COMPANION MAHASISWA
-          ===================================== */}
-
           {currentPage === "ai-assistant" && isMahasiswa && (
             <AIChat />
           )}
 
-          {/* =====================================
-              AKSES TIDAK DIIZINKAN
-          ===================================== */}
-
           {!hasPageAccess && (
             <div className="page-placeholder">
               <h2>Halaman Tidak Tersedia</h2>
-
               <p>
-                Maaf, akun kamu tidak memiliki akses
-                untuk membuka halaman ini.
+                Maaf, akun kamu tidak memiliki akses untuk membuka
+                halaman ini.
               </p>
 
               <button
@@ -269,7 +221,6 @@ function App() {
               </button>
             </div>
           )}
-
         </main>
 
         <ApiStatus />
@@ -283,305 +234,428 @@ function App() {
 
   return (
     <div className="app landing-app">
-
       {/* NAVBAR */}
 
-      <header className="navbar">
-        <a href="#beranda" className="logo">
-          startiva<span>.</span>
-        </a>
+      <header className="landing-navbar">
+        <div className="navbar-inner">
+          <a href="#beranda" className="landing-logo">
+            startiva<span>.</span>
+          </a>
 
-        <nav className="navbar-menu">
-          <a href="#beranda">Beranda</a>
-          <a href="#tentang">Tentang</a>
-          <a href="#fitur">Layanan</a>
-          <a href="#alur">Cara Kerja</a>
-        </nav>
+          <nav className="landing-menu">
+            <a href="#beranda">Beranda</a>
+            <a href="#tentang">Tentang</a>
+            <a href="#fitur">Layanan</a>
+            <a href="#alur">Cara Kerja</a>
+          </nav>
 
-        <div className="nav-actions">
-          <button
-            type="button"
-            className="login-link"
-            onClick={() => setAuthMode("login")}
-          >
-            Masuk
-          </button>
+          <div className="landing-nav-actions">
+            <button
+              type="button"
+              className="landing-login"
+              onClick={() => setAuthMode("login")}
+            >
+              Masuk
+            </button>
 
-          <button
-            type="button"
-            className="btn-primary small"
-            onClick={() => setAuthMode("register")}
-          >
-            Daftar Sekarang
-          </button>
+            <button
+              type="button"
+              className="landing-button landing-button-primary nav-register"
+              onClick={() => setAuthMode("register")}
+            >
+              Daftar Sekarang <span>↗</span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main>
-
         {/* HERO */}
 
-        <section className="hero" id="beranda">
-          <div className="hero-content">
-            <div className="eyebrow">
-              <span className="status-dot" />
-              STUDENT WELL-BEING PLATFORM
-            </div>
+        <section className="wellness-hero" id="beranda">
+          <div className="hero-background-shape shape-left" />
+          <div className="hero-background-shape shape-right" />
 
-            <h1>
-              You deserve
-              <br />
-              <span>to be heard.</span>
-            </h1>
+          <div className="hero-inner">
+            <div className="hero-copy">
+              <div className="hero-eyebrow">
+                <span className="eyebrow-icon">✳</span>
+                STUDENT WELL-BEING PLATFORM
+              </div>
 
-            <p>
-              Kenali kondisi dirimu, pahami kebutuhan emosional,
-              dan temukan dukungan melalui layanan konseling
-              sebaya bersama Startiva.
-            </p>
+              <h1>
+                You deserve
+                <br />
+                to be <span>heard.</span>
+              </h1>
 
-            <div className="hero-actions">
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => setAuthMode("register")}
-              >
-                Mulai Sekarang
-                <span>→</span>
-              </button>
+              <p className="hero-description">
+                Setiap perasaan punya cerita. Kenali dirimu,
+                pahami kebutuhanmu, dan temukan dukungan yang
+                tepat melalui Startiva.
+              </p>
 
-              <a href="#tentang" className="btn-secondary">
-                Pelajari Lebih Lanjut
-              </a>
-            </div>
+              <div className="hero-buttons">
+                <button
+                  type="button"
+                  className="landing-button landing-button-primary"
+                  onClick={() => setAuthMode("register")}
+                >
+                  Mulai Perjalananmu
+                  <span>↗</span>
+                </button>
 
-            <div className="hero-note">
-              <span>✦</span>
-              A safe space to understand yourself.
-            </div>
-          </div>
+                <a href="#tentang" className="landing-button landing-button-outline">
+                  Kenali Startiva
+                  <span>↓</span>
+                </a>
+              </div>
 
-          {/* HERO VISUAL */}
-
-          <div className="hero-visual">
-            <div className="visual-glow" />
-
-            <div className="floating-card top-card">
-              <span className="card-icon">♡</span>
-
-              <div>
-                <strong>You are not alone</strong>
-                <small>Every feeling matters</small>
+              <div className="hero-reassurance">
+                <span className="reassurance-heart">♡</span>
+                A gentle space to understand yourself.
               </div>
             </div>
 
-            <div className="main-illustration">
-              <div className="illustration-circle">
-                <div className="inner-circle">
-                  <span className="bulb">♡</span>
+            {/* HERO ARTWORK */}
 
-                  <div className="sparkle one">✦</div>
-                  <div className="sparkle two">✧</div>
-                  <div className="sparkle three">✦</div>
+            <div className="hero-artwork">
+              <div className="artwork-halo" />
+
+              <div className="artwork-orbit orbit-one" />
+              <div className="artwork-orbit orbit-two" />
+
+              <div className="artwork-main">
+                <div className="artwork-outer">
+                  <div className="artwork-middle">
+                    <div className="artwork-center">
+                      <span className="heart-symbol">♡</span>
+                      <span className="heart-sparkle sparkle-a">✦</span>
+                      <span className="heart-sparkle sparkle-b">✧</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="artwork-caption">
+                  <span>YOUR STORY</span>
+                  <strong>MATTERS.</strong>
                 </div>
               </div>
 
-              <div className="illustration-label">
-                <span>01</span>
-                <strong>YOUR STORY MATTERS</strong>
-              </div>
-            </div>
-
-            <div className="floating-card bottom-card">
-              <div className="mini-avatar">S</div>
-
-              <div>
-                <strong>A little support</strong>
-                <small>Can make a difference.</small>
+              <div className="floating-note note-top">
+                <div className="floating-note-icon">♡</div>
+                <div>
+                  <strong>You are not alone</strong>
+                  <small>Every feeling matters</small>
+                </div>
               </div>
 
-              <span className="check-icon">✓</span>
-            </div>
+              <div className="floating-note note-bottom">
+                <div className="floating-avatar">S</div>
+                <div>
+                  <strong>A little support</strong>
+                  <small>Can make a difference.</small>
+                </div>
+                <span className="floating-check">✓</span>
+              </div>
 
-            <span className="decor decor-one">✳</span>
-            <span className="decor decor-two">✧</span>
+              <span className="artwork-star star-one">✳</span>
+              <span className="artwork-star star-two">✧</span>
+              <span className="artwork-star star-three">✦</span>
+            </div>
+          </div>
+
+          <div className="hero-bottom-line">
+            <span>UNDERSTAND YOURSELF</span>
+            <span className="line-dot">✳</span>
+            <span>CONNECT WITH OTHERS</span>
+            <span className="line-dot">✳</span>
+            <span>GROW AT YOUR OWN PACE</span>
           </div>
         </section>
 
         {/* ABOUT */}
 
-        <section className="about section" id="tentang">
-          <div className="section-label">ABOUT STARTIVA</div>
+        <section className="about-section" id="tentang">
+          <div className="about-decoration">“</div>
+
+          <div className="section-kicker">
+            <span /> A LITTLE ABOUT US
+          </div>
 
           <h2>
-            Everyone deserves
+            You don't have to
             <br />
-            to feel <span>understood.</span>
+            figure everything out
+            <br />
+            <span>on your own.</span>
           </h2>
 
           <p>
-            Startiva merupakan platform konseling sebaya yang
-            membantu mahasiswa mengenali kondisi dirinya melalui
-            asesmen, memahami hasilnya, dan memperoleh dukungan
-            dari konselor sebaya maupun pendampingan AI.
+            Startiva adalah platform konseling sebaya yang membantu
+            mahasiswa mengenali kondisi dirinya melalui RICE Assessment,
+            memahami hasil asesmen, serta mendapatkan dukungan melalui
+            konselor sebaya dan AI Companion.
           </p>
+
+          <div className="about-signature">
+            <span>♡</span> A safe space, just for you.
+          </div>
         </section>
 
         {/* FEATURES */}
 
-        <section className="features section" id="fitur">
-          <div className="section-heading">
-            <div>
-              <div className="section-label">WHAT STARTIVA OFFERS</div>
+        <section className="features-section" id="fitur">
+          <div className="section-container">
+            <div className="features-heading">
+              <div>
+                <div className="section-kicker">
+                  <span /> WHAT WE OFFER
+                </div>
 
-              <h2>
-                Understand yourself,
-                <span> one step at a time.</span>
-              </h2>
+                <h2>
+                  A little help can
+                  <br />
+                  make a <span>big difference.</span>
+                </h2>
+              </div>
+
+              <p>
+                Temukan cara untuk memahami dirimu, terhubung
+                dengan orang lain, dan mendapatkan dukungan
+                dalam perjalananmu.
+              </p>
             </div>
 
-            <p>
-              Ruang untuk mengenali diri, mendapatkan dukungan,
-              dan mengambil langkah positif.
-            </p>
+            <div className="wellness-feature-grid">
+              <article className="wellness-card card-assessment">
+                <div className="wellness-card-top">
+                  <span>01 / SELF DISCOVERY</span>
+                  <span className="card-arrow">↗</span>
+                </div>
+
+                <div className="wellness-icon icon-heart">♡</div>
+
+                <h3>RICE Assessment</h3>
+
+                <p>
+                  Mulai dengan mengenali kondisi dan kebutuhan
+                  dirimu melalui asesmen yang terstruktur.
+                </p>
+
+                <div className="card-bottom">
+                  <span>Know yourself better</span>
+                  <span>01</span>
+                </div>
+              </article>
+
+              <article className="wellness-card card-counseling">
+                <div className="wellness-card-top">
+                  <span>02 / HUMAN CONNECTION</span>
+                  <span className="card-arrow">↗</span>
+                </div>
+
+                <div className="wellness-icon icon-flower">✿</div>
+
+                <h3>Konseling Sebaya</h3>
+
+                <p>
+                  Temukan ruang aman untuk bercerita dan
+                  mendapatkan dukungan dari konselor sebaya.
+                </p>
+
+                <div className="card-bottom">
+                  <span>You deserve to be heard</span>
+                  <span>02</span>
+                </div>
+              </article>
+
+              <article className="wellness-card card-ai">
+                <div className="wellness-card-top">
+                  <span>03 / AI COMPANION</span>
+                  <span className="card-arrow">↗</span>
+                </div>
+
+                <div className="wellness-icon icon-sparkle">✧</div>
+
+                <h3>AI Companion</h3>
+
+                <p>
+                  Teman refleksi untuk membantumu memahami
+                  hasil asesmen dan menemukan langkah awal.
+                </p>
+
+                <div className="card-bottom">
+                  <span>One step at a time</span>
+                  <span>03</span>
+                </div>
+              </article>
+            </div>
           </div>
+        </section>
 
-          <div className="feature-grid">
-            <article className="feature-card purple">
-              <div className="feature-number">01 / SELF ASSESSMENT</div>
-              <div className="feature-icon">♡</div>
+        {/* QUOTE / MESSAGE */}
 
-              <h3>RICE Assessment</h3>
+        <section className="quote-section">
+          <div className="quote-inner">
+            <div className="quote-decoration quote-left">✳</div>
 
-              <p>
-                Kenali kondisi dan kebutuhan dirimu melalui
-                asesmen yang terstruktur.
-              </p>
+            <div className="quote-content">
+              <span className="quote-mark">“</span>
 
-              <a href="#alur">Explore feature ↗</a>
-            </article>
-
-            <article className="feature-card peach">
-              <div className="feature-number">02 / PEER COUNSELING</div>
-              <div className="feature-icon">✳</div>
-
-              <h3>Konseling Sebaya</h3>
+              <h2>
+                Taking care of yourself
+                <br />
+                is not selfish. It's <span>necessary.</span>
+              </h2>
 
               <p>
-                Dapatkan ruang bercerita dan dukungan dari
-                konselor sebaya yang tersedia.
+                Tidak ada perjalanan yang harus diselesaikan
+                dalam satu hari. Mulailah dari langkah kecil.
               </p>
+            </div>
 
-              <a href="#alur">Explore feature ↗</a>
-            </article>
-
-            <article className="feature-card green">
-              <div className="feature-number">03 / AI COMPANION</div>
-              <div className="feature-icon">✧</div>
-
-              <h3>AI Companion</h3>
-
-              <p>
-                Teman refleksi untuk membantu memahami hasil
-                asesmen dan menemukan langkah awal.
-              </p>
-
-              <a href="#alur">Explore feature ↗</a>
-            </article>
+            <div className="quote-decoration quote-right">✿</div>
           </div>
         </section>
 
         {/* WORKFLOW */}
 
-        <section className="workflow section" id="alur">
-          <div className="section-label">HOW IT WORKS</div>
+        <section className="workflow-section" id="alur">
+          <div className="section-container">
+            <div className="workflow-heading">
+              <div className="section-kicker">
+                <span /> YOUR JOURNEY WITH STARTIVA
+              </div>
 
-          <h2>
-            A small step toward
-            <span> a better you.</span>
-          </h2>
+              <h2>
+                Start with a small step,
+                <br />
+                <span>grow at your own pace.</span>
+              </h2>
 
-          <div className="steps">
-            <div className="step">
-              <span>01</span>
-              <h3>Create Account</h3>
               <p>
-                Buat akun mahasiswa untuk memulai perjalananmu
-                bersama Startiva.
+                Perjalanan memahami diri dimulai dari satu langkah
+                sederhana. Ikuti prosesnya bersama Startiva.
               </p>
             </div>
 
-            <div className="step">
-              <span>02</span>
-              <h3>Complete Assessment</h3>
-              <p>
-                Isi RICE Assessment untuk mengenali kondisi
-                dan kebutuhan dirimu.
-              </p>
-            </div>
+            <div className="journey-steps">
+              <article className="journey-step">
+                <div className="journey-number">01</div>
+                <div className="journey-symbol">♡</div>
+                <h3>Create Account</h3>
+                <p>
+                  Daftarkan akun mahasiswa untuk memulai
+                  perjalananmu bersama Startiva.
+                </p>
+              </article>
 
-            <div className="step">
-              <span>03</span>
-              <h3>Understand Your Result</h3>
-              <p>
-                Pelajari hasil asesmen dan rekomendasi
-                pendampingan yang tersedia.
-              </p>
-            </div>
+              <article className="journey-step">
+                <div className="journey-number">02</div>
+                <div className="journey-symbol">✿</div>
+                <h3>Complete Assessment</h3>
+                <p>
+                  Isi RICE Assessment untuk mengenali kondisi
+                  dan kebutuhan dirimu.
+                </p>
+              </article>
 
-            <div className="step">
-              <span>04</span>
-              <h3>Get Support</h3>
-              <p>
-                Ajukan konsultasi dengan konselor sebaya
-                atau gunakan AI Companion.
-              </p>
+              <article className="journey-step">
+                <div className="journey-number">03</div>
+                <div className="journey-symbol">✧</div>
+                <h3>Understand Your Result</h3>
+                <p>
+                  Pelajari hasil asesmen dan rekomendasi
+                  pendampingan yang tersedia.
+                </p>
+              </article>
+
+              <article className="journey-step">
+                <div className="journey-number">04</div>
+                <div className="journey-symbol">♡</div>
+                <h3>Get Support</h3>
+                <p>
+                  Hubungi konselor sebaya atau gunakan AI
+                  Companion untuk mendapatkan dukungan.
+                </p>
+              </article>
             </div>
           </div>
         </section>
 
         {/* CTA */}
 
-        <section className="cta section" id="daftar">
-          <div>
-            <div className="section-label">
-              YOUR STORY MATTERS
+        <section className="landing-cta">
+          <div className="cta-decoration cta-decoration-one">✿</div>
+          <div className="cta-decoration cta-decoration-two">✧</div>
+
+          <div className="cta-content">
+            <div className="cta-kicker">
+              <span /> YOUR STORY MATTERS
             </div>
 
             <h2>
-              You don't have to
+              You are worthy
               <br />
-              figure it all <span>out alone.</span>
+              of <span>being understood.</span>
             </h2>
 
             <p>
-              Mulai dengan mengenali dirimu. Tidak apa-apa
-              untuk bercerita dan mencari dukungan.
+              Tidak apa-apa untuk berhenti sejenak, mengenali diri,
+              dan mencari dukungan. Startiva ada untuk menemanimu.
             </p>
+
+            <button
+              type="button"
+              className="landing-button cta-button"
+              onClick={() => setAuthMode("register")}
+            >
+              Mulai Bersama Startiva
+              <span>↗</span>
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="btn-light"
-            onClick={() => setAuthMode("register")}
-          >
-            Get Started
-            <span>→</span>
-          </button>
         </section>
-
       </main>
 
       {/* FOOTER */}
 
-      <footer className="footer">
-        <a href="#beranda" className="logo">
-          startiva<span>.</span>
-        </a>
+      <footer className="landing-footer">
+        <div className="footer-main">
+          <div className="footer-brand">
+            <a href="#beranda" className="landing-logo">
+              startiva<span>.</span>
+            </a>
 
-        <p>Understand. Connect. Grow.</p>
+            <p>
+              Understand. Connect.
+              <br />
+              Grow at your own pace.
+            </p>
+          </div>
 
-        <small>© 2026 Startiva. All rights reserved.</small>
+          <div className="footer-links">
+            <span>EXPLORE</span>
+            <a href="#beranda">Beranda</a>
+            <a href="#tentang">Tentang Kami</a>
+            <a href="#fitur">Layanan</a>
+            <a href="#alur">Cara Kerja</a>
+          </div>
+
+          <div className="footer-message">
+            <span>A LITTLE REMINDER</span>
+            <p>
+              Your feelings are valid.
+              <br />
+              Your story matters. ♡
+            </p>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <span>© 2026 Startiva. All rights reserved.</span>
+          <span>Made with care for every student. ♡</span>
+        </div>
       </footer>
 
       <ApiStatus />
@@ -595,7 +669,6 @@ function App() {
           onSuccess={handleAuthSuccess}
         />
       )}
-
     </div>
   );
 }
