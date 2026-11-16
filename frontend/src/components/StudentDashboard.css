@@ -1325,3 +1325,48 @@
     height: 230px;
   }
 }
+
+
+/* HEADER ACCOUNT ACTIONS */
+.header-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid #eadbd7;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sd-wine);
+  font-family: "DM Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-logout:hover {
+  background: #f5e9e7;
+  border-color: #d9b9b5;
+  color: #a34350;
+}
+
+@media (max-width: 760px) {
+  .header-account-actions {
+    gap: 10px;
+  }
+
+  .header-logout {
+    padding: 9px;
+  }
+
+  .header-logout span {
+    display: none;
+  }
+}

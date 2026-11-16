@@ -280,26 +280,28 @@ function StudentDashboard({
 
       {/* MAIN */}
       <main className="dashboard-main" id="dashboard">
-        {/* HEADER */}
-        <header className="dashboard-header">
-          <div className="header-left">
-            <button
-              type="button"
-              className="mobile-menu-button"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Buka navigasi"
-            >
-              <Menu size={21} />
-            </button>
+       
+      {/* HEADER */}
+      <header className="dashboard-header">
+        <div className="header-left">
+          <button
+            type="button"
+            className="mobile-menu-button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Buka navigasi"
+          >
+            <Menu size={21} />
+          </button>
 
-            <div>
-              <div className="dashboard-breadcrumb">
-                STARTIVA <span>/</span> DASHBOARD
-              </div>
-              <h1>Dashboard</h1>
+          <div>
+            <div className="dashboard-breadcrumb">
+              STARTIVA <span>/</span> DASHBOARD
             </div>
+            <h1>Dashboard</h1>
           </div>
+        </div>
 
+        <div className="header-account-actions">
           <button
             type="button"
             className="header-profile"
@@ -314,7 +316,19 @@ function StudentDashboard({
               {initial}
             </div>
           </button>
-        </header>
+
+          <button
+            type="button"
+            className="header-logout"
+            onClick={onLogout}
+            title="Keluar dari akun"
+            aria-label="Keluar dari akun"
+          >
+            <LogOut size={17} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
 
         {/* WELCOME */}
         <section className="welcome-banner">
