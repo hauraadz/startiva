@@ -64,7 +64,7 @@ function StudentDashboard({
       action: onOpenConsultation,
     },
     {
-      label: "Hermes AI",
+      label: "Inner Space",
       icon: Sparkles,
       action: onOpenAI,
     },
