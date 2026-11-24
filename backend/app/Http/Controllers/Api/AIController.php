@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Log;
 class AIController extends Controller
 {
     /**
-     * STARTIVA AI CHAT
+     * STARTIVA AI CHAT - GROQ API
      *
      * POST /api/mahasiswa/ai/chat
      *
-     * AI menggunakan Hermes Gateway.
+     * AI menggunakan Groq API.
      * Hanya dapat digunakan oleh mahasiswa.
      */
     public function chat(Request $request)
@@ -47,51 +47,52 @@ class AIController extends Controller
         }
 
         // =============================================
-        // 3. KONFIGURASI HERMES GATEWAY
+        // 3. KONFIGURASI GROQ API
         // =============================================
 
-        $apiUrl = trim((string) config('services.hermes.url'));
-        $apiKey = trim((string) config('services.hermes.key'));
+        $apiKey = trim((string) config('services.groq.api_key'));
 
-        $model = config(
-            'services.hermes.model',
-            'hermes-agent'
-        );
+        $baseUrl = trim((string) config(
+            'services.groq.base_url',
+            'https://api.groq.com/openai/v1'
+        ));
+
+        $model = trim((string) config(
+            'services.groq.model',
+            'llama-3.3-70b-versatile'
+        ));
 
         $timeout = (int) config(
-            'services.hermes.timeout',
+            'services.groq.timeout',
             120
         );
 
-        if (empty($apiUrl) || empty($apiKey)) {
-            Log::error('STARTIVA AI: Konfigurasi Hermes tidak tersedia.', [
-                'has_url' => !empty($apiUrl),
-                'has_key' => !empty($apiKey),
-            ]);
+        if (empty($apiKey)) {
+            Log::error('STARTIVA AI: Groq API Key tidak tersedia.');
 
             return response()->json([
                 'success' => false,
-                'message' => 'Konfigurasi Hermes belum tersedia.',
+                'message' => 'Konfigurasi Groq API Key belum tersedia.',
             ], 500);
         }
 
-        if (!filter_var($apiUrl, FILTER_VALIDATE_URL)) {
-            Log::error('STARTIVA AI: Format URL Hermes tidak valid.');
+        if (!filter_var($baseUrl, FILTER_VALIDATE_URL)) {
+            Log::error('STARTIVA AI: Format URL Groq tidak valid.');
 
             return response()->json([
                 'success' => false,
-                'message' => 'URL Hermes Gateway tidak valid.',
+                'message' => 'URL Groq API tidak valid.',
             ], 500);
         }
 
         if (empty($model)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Model Hermes belum dikonfigurasi.',
+                'message' => 'Model Groq belum dikonfigurasi.',
             ], 500);
         }
 
-        $endpoint = rtrim($apiUrl, '/') . '/v1/chat/completions';
+        $endpoint = rtrim($baseUrl, '/') . '/chat/completions';
 
         // =============================================
         // 4. MENGAMBIL ASSESSMENT TERBARU
@@ -257,7 +258,7 @@ mendapatkan dukungan awal dan terhubung dengan konselor manusia.
 PROMPT;
 
         // =============================================
-        // 7. MENYUSUN PESAN HERMES
+        // 7. MENYUSUN PESAN UNTUK GROQ
         // =============================================
 
         $messages = [
@@ -280,14 +281,13 @@ PROMPT;
         ];
 
         // =============================================
-        // 8. MENGHUBUNGI HERMES GATEWAY
+        // 8. MENGHUBUNGI GROQ API
         // =============================================
 
         try {
-            Log::info('STARTIVA AI: Menghubungi Hermes Gateway.', [
+            Log::info('STARTIVA AI: Menghubungi Groq API.', [
                 'has_assessment' => $latestAssessment !== null,
                 'model' => $model,
-                'endpoint' => $endpoint,
             ]);
 
             $response = Http::acceptJson()
@@ -296,6 +296,8 @@ PROMPT;
                 ->post($endpoint, [
                     'model' => $model,
                     'messages' => $messages,
+                    'temperature' => 0.7,
+                    'max_completion_tokens' => 1024,
                     'stream' => false,
                 ]);
 
@@ -304,7 +306,7 @@ PROMPT;
             // =============================================
 
             if (!$response->successful()) {
-                Log::error('STARTIVA AI: Hermes HTTP Error.', [
+                Log::error('STARTIVA AI: Groq HTTP Error.', [
                     'status' => $response->status(),
                     'response' => substr($response->body(), 0, 3000),
                 ]);
@@ -317,13 +319,13 @@ PROMPT;
             }
 
             // =============================================
-            // 10. MEMBACA RESPONSE HERMES
+            // 10. MEMBACA RESPONSE GROQ
             // =============================================
 
             $result = $response->json();
 
             if (!is_array($result)) {
-                Log::error('STARTIVA AI: Format respons Hermes tidak valid.');
+                Log::error('STARTIVA AI: Format respons Groq tidak valid.');
 
                 return response()->json([
                     'success' => false,
@@ -360,7 +362,7 @@ PROMPT;
                 !is_string($answer) ||
                 trim($answer) === ''
             ) {
-                Log::error('STARTIVA AI: Respons Hermes kosong.', [
+                Log::error('STARTIVA AI: Respons Groq kosong.', [
                     'response_keys' => array_keys($result),
                 ]);
 
@@ -374,7 +376,7 @@ PROMPT;
             // 12. RESPONSE BERHASIL
             // =============================================
 
-            Log::info('STARTIVA AI: Respons berhasil diterima.');
+            Log::info('STARTIVA AI: Respons berhasil diterima dari Groq.');
 
             return response()->json([
                 'success' => true,
@@ -384,13 +386,13 @@ PROMPT;
             ], 200);
 
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('STARTIVA AI: Koneksi Hermes gagal.', [
+            Log::error('STARTIVA AI: Koneksi Groq gagal.', [
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak dapat terhubung ke Hermes Gateway.',
+                'message' => 'Tidak dapat terhubung ke Groq API.',
             ], 502);
 
         } catch (\Throwable $e) {

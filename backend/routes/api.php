@@ -104,7 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
             // -----------------------------------------
-            // STARTIVA AI - HERMES
+            // STARTIVA AI - GROQ API
             // -----------------------------------------
 
             Route::post('/ai/chat', [

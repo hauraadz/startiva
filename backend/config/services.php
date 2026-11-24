@@ -27,15 +27,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Hermes AI Gateway
+    | Groq AI
     |--------------------------------------------------------------------------
     */
 
-    'hermes' => [
-        'url' => env('HERMES_API_URL'),
-        'key' => env('HERMES_API_KEY'),
-        'model' => env('HERMES_MODEL', 'hermes-agent'),
-        'timeout' => env('HERMES_TIMEOUT', 120),
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+        'base_url' => env(
+            'GROQ_BASE_URL',
+            'https://api.groq.com/openai/v1'
+        ),
+        'model' => env(
+            'GROQ_MODEL',
+            'llama-3.3-70b-versatile'
+        ),
+        'timeout' => env('GROQ_TIMEOUT', 120),
     ],
 
     /*
